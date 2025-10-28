@@ -10,7 +10,7 @@ Moderní desktop aplikace pro rychlý překlad s podporou **DeepL** a **Google T
 - ✅ **Překlad promptů**: Rychle přeložit české zadání pro anglické AI (Claude Code, ChatGPT)
 - ✅ **Překlad odpovědí AI**: Okamžitý překlad anglických odpovědí do češtiny
 - ✅ **Práce s kódem**: Překlad komentářů, dokumentace, commit messages
-- ✅ **3-krokový workflow**: Otevři (Win+P) → Přelož (Win+P) → Zkopíruj do schránky (Win+P)
+- ✅ **3-krokový workflow**: Otevři (Ctrl+P+P) → Přelož (Ctrl+P+P) → Zkopíruj do schránky (Ctrl+P+P)
 - ✅ **System tray**: Běží na pozadí, okamžitě dostupný globální zkratkou
 
 ## 🚀 Funkce
@@ -20,10 +20,12 @@ Moderní desktop aplikace pro rychlý překlad s podporou **DeepL** a **Google T
   - **Google Translate** - Zdarma bez API klíče, neomezené použití
 - **System Tray**: Aplikace běží na pozadí v system tray
 - **Klávesové zkratky**:
-  - **`Win+P`** - Hlavní zkratka (1. stisk = otevře, 2. stisk = přeloží)
-  - **`Ctrl+P+P`** - Alternativní zkratka (dvojité rychlé stisknutí)
+  - **`Ctrl+P+P`** - Hlavní zkratka (dvojité rychlé stisknutí Ctrl+P < 0.5s)
+    - 1. stisk = otevře okno
+    - 2. stisk = přeloží text
+    - 3. stisk = zkopíruje a zavře
   - **`ESC`** - Zavře okno bez překladu
-  - **`Ctrl+Enter`** - Přeloží text v okně
+  - **`Ctrl+Enter`** - Přeloží text v okně (legacy)
 - **Automatické vymazání**: Input pole se automaticky vymaže po úspěšném překladu
 - **Počítadlo znaků**: Sledování spotřeby API (DeepL zobrazuje usage, Google je neomezený)
 - **Varování při limitu**: Upozornění při dosažení 96% limitu (DeepL)
@@ -137,24 +139,24 @@ Aplikace se spustí v system tray. Klikněte na ikonu pro otevření menu.
 - **API klíč**: DeepL API klíč (Free nebo Pro) - pouze pro DeepL
 - **Zdrojový jazyk**: Jazyk vstupního textu (AUTO pro automatickou detekci)
 - **Cílový jazyk**: Jazyk překladu
-- **Klávesová zkratka**: Přizpůsobení hlavní zkratky Win+P (aplikuje se okamžitě)
+- **Klávesová zkratka**: Hlavní zkratka (výchozí: Ctrl+P+P double-press, lze změnit)
 - **Práh varování**: Limit znaků pro varování - pouze pro DeepL (výchozí: 480,000)
 
 ## 🎮 Použití
 
-### Hlavní workflow (3-step s Win+P nebo Ctrl+P+P):
+### Hlavní workflow (3-step s Ctrl+P+P):
 
-**Nový workflow se třemi kroky:**
+**Workflow se třemi kroky pomocí dvojitého Ctrl+P:**
 
-1. **První `Win+P` (nebo `Ctrl+P+P`)** → **Otevře okno**
+1. **První `Ctrl+P+P`** (stisknout Ctrl+P dvakrát rychle) → **Otevře okno**
    - Okno se zobrazí s fokusem na input poli
    - Vložte text k překladu
 
-2. **Druhý `Win+P` (nebo `Ctrl+P+P`)** → **Přeloží text**
+2. **Druhý `Ctrl+P+P`** → **Přeloží text**
    - Text se přeloží a zobrazí v "Přeložený text" poli
    - **Okno zůstane otevřené** - můžete si prohlédnout překlad
 
-3. **Třetí `Win+P` (nebo `Ctrl+P+P`)** → **Zkopíruje a zavře**
+3. **Třetí `Ctrl+P+P`** → **Zkopíruje a zavře**
    - Překlad se zkopíruje do schránky
    - Input pole se vymaže
    - Okno se zavře
@@ -332,10 +334,11 @@ transka/
 
 #### **hotkey_manager.py** - Klávesové zkratky (81 řádků)
 - `HotkeyManager` - správa globálních zkratek
-  - `register_hotkeys()` - registrace Win+P a Ctrl+P+P
-  - `_handle_ctrl_p()` - double-press detection (<0.5s mezi stisky)
+  - `register_hotkeys()` - registrace hlavní zkratky (výchozí: ctrl+p+p)
+  - `_handle_ctrl_p()` - **double-press detection** (Ctrl+P dvakrát < 0.5s)
   - `update_main_hotkey()` - dynamická změna zkratky (live reload)
   - `unregister_all()` - cleanup při ukončení
+  - **Poznámka**: Používá time tracking pro detekci dvojitého stisku
 
 #### **gui_builder.py** - GUI konstrukce (245 řádků)
 - `GUIBuilder` - Builder pattern pro vytvoření GUI
