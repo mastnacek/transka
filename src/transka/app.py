@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-DeepL Translator - Desktop aplikace pro rychlý překlad
+Transka - Desktop aplikace pro rychlý překlad
 """
 import tkinter as tk
 from tkinter import ttk, messagebox, scrolledtext, font as tkfont
@@ -23,9 +23,12 @@ class SettingsWindow:
 
     def __init__(self, parent, parent_app, config: Config, translator: DeepLTranslator, on_save_callback):
         self.window = tk.Toplevel(parent)
-        self.window.title("Nastavení")
+        self.window.title("Nastavení - Transka")
         self.window.geometry("500x450")
         self.window.resizable(False, False)
+
+        # Dark theme pro Settings okno
+        self.window.configure(bg=COLORS["bg_dark"])
 
         self.parent = parent_app  # Reference na TranslatorApp pro live reload
         self.config = config
@@ -189,7 +192,7 @@ class TranslatorApp:
         self.translator = DeepLTranslator(self.config.api_key)
 
         self.root = tk.Tk()
-        self.root.title("DeepL Translator")
+        self.root.title("Transka")
         self.root.geometry(f"{self.config.window_width}x{self.config.window_height}")
 
         # Modern Dark Theme
@@ -263,6 +266,31 @@ class TranslatorApp:
         style.map('TButton',
             background=[('active', COLORS["bg_button_hover"]), ('pressed', COLORS["bg_darker"])],
             foreground=[('active', COLORS["accent_cyan"]), ('pressed', COLORS["accent_purple"])]
+        )
+
+        # Entry style
+        style.configure('TEntry',
+            fieldbackground=COLORS["bg_input"],
+            background=COLORS["bg_input"],
+            foreground=COLORS["text_primary"],
+            insertcolor=COLORS["accent_cyan"],
+            bordercolor=COLORS["border"],
+            lightcolor=COLORS["border_focus"],
+            darkcolor=COLORS["border"]
+        )
+
+        # Combobox style
+        style.configure('TCombobox',
+            fieldbackground=COLORS["bg_input"],
+            background=COLORS["bg_button"],
+            foreground=COLORS["text_primary"],
+            arrowcolor=COLORS["accent_cyan"],
+            bordercolor=COLORS["border"]
+        )
+        style.map('TCombobox',
+            fieldbackground=[('readonly', COLORS["bg_input"])],
+            selectbackground=[('readonly', COLORS["accent_cyan"])],
+            selectforeground=[('readonly', COLORS["bg_dark"])]
         )
 
     def _create_widgets(self):
@@ -381,7 +409,7 @@ class TranslatorApp:
             pystray.MenuItem("Ukončit", self._quit_app)
         )
 
-        self.tray_icon = pystray.Icon("deepl_translator", create_image(), "DeepL Translator", menu)
+        self.tray_icon = pystray.Icon("transka", create_image(), "Transka", menu)
 
         # Spuštění tray ikony v separátním vlákně
         tray_thread = threading.Thread(target=self.tray_icon.run, daemon=True)
