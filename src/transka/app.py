@@ -3,13 +3,8 @@
 Transka - Desktop aplikace pro rychlý překlad
 """
 import tkinter as tk
-from tkinter import ttk, messagebox, scrolledtext
+from tkinter import messagebox
 import threading
-import pyperclip
-import keyboard
-import pystray
-from PIL import Image, ImageDraw
-from typing import Optional
 import sys
 import os
 
@@ -19,7 +14,11 @@ from transka.google_translator import GoogleTranslator
 from transka.base_translator import BaseTranslator, UsageInfo
 from transka.settings_window import SettingsWindow
 from transka.theme_manager import ThemeManager
-from transka.theme import COLORS, FONTS
+from transka.translation_workflow import TranslationWorkflow
+from transka.hotkey_manager import HotkeyManager
+from transka.tray_manager import TrayManager
+from transka.gui_builder import GUIBuilder
+from transka.theme import COLORS
 
 
 class TranslatorApp:
@@ -29,13 +28,82 @@ class TranslatorApp:
         self.config = Config()
         self.translator = self._create_translator()
 
+        # Tkinter okno
         self.root = tk.Tk()
         self.root.title("Transka")
         self.root.geometry(f"{self.config.window_width}x{self.config.window_height}")
+        self._setup_window_icon()
 
-        # Nastavení ikony okna
+        # Theme Manager
+        self.theme_manager = ThemeManager(self.root)
+        self.theme_manager.apply_theme()
+        fonts = self.theme_manager.get_fonts()
+
+        # GUI Builder
+        gui_builder = GUIBuilder(
+            self.root,
+            fonts,
+            self._get_translator_display(),
+            self._get_language_display(),
+            self.config.hotkey_main
+        )
+
+        # Skrytí okna při startu
+        self.root.withdraw()
+        self.is_visible = False
+
+        # Build GUI
+        widgets = gui_builder.build(
+            on_translate=self._translate,
+            on_clear=self._clear,
+            on_settings=self._show_settings,
+            on_close=self._hide_window
+        )
+
+        # Uložení důležitých widgetů
+        self.input_text = widgets["input_text"]
+        self.output_text = widgets["output_text"]
+        self.status_label = widgets["status_label"]
+        self.usage_label = widgets["usage_label"]
+        self.translator_label = widgets["translator_label"]
+        self.lang_label = widgets["lang_label"]
+
+        # Translation Workflow Manager
+        self.workflow = TranslationWorkflow(
+            translator=self.translator,
+            source_lang=self.config.source_lang,
+            target_lang=self.config.target_lang,
+            input_widget=self.input_text,
+            output_widget=self.output_text,
+            status_callback=self._update_status,
+            usage_update_callback=self._update_usage
+        )
+
+        # Window events
+        self._setup_window_events()
+
+        # Hotkey Manager
+        self.hotkey_manager = HotkeyManager(
+            main_hotkey=self.config.hotkey_main,
+            workflow_callback=self._handle_main_hotkey
+        )
+        self.hotkey_manager.register_hotkeys()
+
+        # System Tray Manager
+        self.tray_manager = TrayManager(
+            app_name="Transka",
+            on_show=self._show_window,
+            on_settings=self._show_settings,
+            on_quit=self._quit_app
+        )
+        self.tray_manager.start()
+
+        # Aktualizace usage při startu
+        self._update_usage()
+
+    def _setup_window_icon(self):
+        """Nastaví ikonu okna"""
         try:
-            # Cesta k ikoně v assets/
             icon_path = os.path.join(os.path.dirname(__file__), "assets", "transka_icon.png")
             if os.path.exists(icon_path):
                 icon_img = tk.PhotoImage(file=icon_path)
@@ -43,48 +111,12 @@ class TranslatorApp:
         except Exception as e:
             print(f"Nelze načíst ikonu: {e}")
 
-        # Modern Dark Theme
-        self.theme_manager = ThemeManager(self.root)
-        self.theme_manager.apply_theme()
-
-        # Získání fontů z theme manageru
-        fonts = self.theme_manager.get_fonts()
-        self.mono_font = fonts["mono_font"]
-        self.mono_font_large = fonts["mono_font_large"]
-        self.sans_font = fonts["sans_font"]
-        self.sans_font_bold = fonts["sans_font_bold"]
-
-        # Skrytí okna při startu
-        self.root.withdraw()
-
-        # Proměnné
-        self.is_visible = False
-        self.previous_window = None
-        # State machine pro workflow:
-        # 0 = HIDDEN (skryté), 1 = SHOWN (viditelné), 2 = TRANSLATED (přeloženo)
-        self.window_state = 0
-
-        # GUI komponenty
-        self._create_widgets()
-        self._setup_window_events()
-
-        # System tray
-        self.tray_icon: Optional[pystray.Icon] = None
-        self._setup_tray()
-
-        # Klávesové zkratky
-        self._setup_hotkeys()
-
-        # Aktualizace usage při startu
-        self._update_usage()
-
     def _create_translator(self) -> BaseTranslator:
         """Vytvoří instance překladače podle konfigurace"""
         service = self.config.translator_service.lower()
-
         if service == "google":
             return GoogleTranslator()
-        else:  # default: deepl
+        else:
             return DeepLTranslator(self.config.api_key)
 
     def _get_translator_display(self) -> str:
@@ -92,406 +124,87 @@ class TranslatorApp:
         service = self.config.translator_service.upper()
         if service == "GOOGLE":
             return "🔵 Google Translate"
-        else:  # DEEPL
+        else:
             return "🟢 DeepL"
 
     def _get_language_display(self) -> str:
         """Vrátí formátovaný string s aktuálními jazyky"""
-        source = self.config.source_lang
-        target = self.config.target_lang
-        return f"🌐 {source} → {target}"
-
-    def _create_widgets(self):
-        """Vytvoří GUI komponenty"""
-        # Hlavní frame
-        main_frame = ttk.Frame(self.root, padding="10")
-        main_frame.grid(row=0, column=0, sticky=(tk.W, tk.E, tk.N, tk.S))
-
-        # Konfigurace grid weights
-        self.root.columnconfigure(0, weight=1)
-        self.root.rowconfigure(0, weight=1)
-        main_frame.columnconfigure(0, weight=1)
-        main_frame.rowconfigure(2, weight=1)
-        main_frame.rowconfigure(4, weight=1)
-
-        # Header s aktuálními jazyky a překladačem
-        # Použití tk.Frame místo ttk.Frame pro správné dark pozadí
-        header_frame = tk.Frame(main_frame, bg=COLORS["bg_dark"])
-        header_frame.grid(row=0, column=0, sticky=(tk.W, tk.E), pady=(0, 10))
-
-        # Použití tk.Label místo ttk.Label pro přesné barvy
-        self.translator_label = tk.Label(
-            header_frame,
-            text=self._get_translator_display(),
-            fg=COLORS["accent_yellow"],
-            bg=COLORS["bg_dark"],
-            font=self.sans_font_bold
-        )
-        self.translator_label.pack(side=tk.LEFT, padx=(0, 15))
-
-        self.lang_label = tk.Label(
-            header_frame,
-            text=self._get_language_display(),
-            fg=COLORS["accent_cyan"],
-            bg=COLORS["bg_dark"],
-            font=self.sans_font_bold
-        )
-        self.lang_label.pack(side=tk.LEFT)
-
-        # Input label a textové pole
-        input_label = ttk.Label(main_frame, text="Text k překladu:")
-        input_label.grid(row=1, column=0, sticky=tk.W, pady=(0, 5))
-
-        self.input_text = scrolledtext.ScrolledText(
-            main_frame,
-            height=8,
-            wrap=tk.WORD,
-            font=self.mono_font_large,
-            bg=COLORS["bg_input"],
-            fg=COLORS["text_primary"],
-            insertbackground=COLORS["accent_cyan"],  # Kurzor
-            selectbackground=COLORS["accent_cyan"],
-            selectforeground=COLORS["bg_dark"],
-            relief=tk.FLAT,
-            borderwidth=2,
-            highlightthickness=2,
-            highlightcolor=COLORS["border_focus"],
-            highlightbackground=COLORS["border"]
-        )
-        self.input_text.grid(row=2, column=0, sticky=(tk.W, tk.E, tk.N, tk.S), pady=(0, 10))
-        # Styling scrollbaru - dark theme
-        self.input_text.vbar.config(
-            bg=COLORS["bg_darker"],
-            troughcolor=COLORS["bg_dark"],
-            activebackground=COLORS["accent_cyan"],
-            relief=tk.FLAT,
-            width=12
-        )
-        self.input_text.focus()
-
-        # Output label a textové pole
-        output_label = ttk.Label(main_frame, text="Přeložený text:")
-        output_label.grid(row=3, column=0, sticky=tk.W, pady=(0, 5))
-
-        self.output_text = scrolledtext.ScrolledText(
-            main_frame,
-            height=8,
-            wrap=tk.WORD,
-            state=tk.DISABLED,
-            font=self.mono_font_large,
-            bg=COLORS["bg_darker"],
-            fg=COLORS["text_primary"],
-            selectbackground=COLORS["accent_purple"],
-            selectforeground=COLORS["bg_dark"],
-            relief=tk.FLAT,
-            borderwidth=2,
-            highlightthickness=2,
-            highlightcolor=COLORS["accent_purple"],
-            highlightbackground=COLORS["border"]
-        )
-        self.output_text.grid(row=4, column=0, sticky=(tk.W, tk.E, tk.N, tk.S), pady=(0, 10))
-        # Styling scrollbaru - dark theme
-        self.output_text.vbar.config(
-            bg=COLORS["bg_darker"],
-            troughcolor=COLORS["bg_dark"],
-            activebackground=COLORS["accent_purple"],
-            relief=tk.FLAT,
-            width=12
-        )
-
-        # Status bar s počítadlem znaků
-        status_frame = ttk.Frame(main_frame)
-        status_frame.grid(row=5, column=0, sticky=(tk.W, tk.E), pady=(5, 0))
-
-        self.status_label = ttk.Label(status_frame, text="Připraveno", foreground=COLORS["text_primary"])
-        self.status_label.pack(side=tk.LEFT)
-
-        self.usage_label = ttk.Label(status_frame, text="Načítám usage...", foreground=COLORS["text_secondary"])
-        self.usage_label.pack(side=tk.RIGHT)
-
-        # Tlačítka
-        button_frame = ttk.Frame(main_frame)
-        button_frame.grid(row=6, column=0, pady=(10, 0))
-
-        ttk.Button(
-            button_frame,
-            text=f"Přeložit ({self.config.hotkey_main})",
-            command=self._translate
-        ).pack(side=tk.LEFT, padx=5)
-
-        ttk.Button(button_frame, text="Vymazat", command=self._clear).pack(side=tk.LEFT, padx=5)
-        ttk.Button(button_frame, text="Nastavení", command=self._show_settings).pack(side=tk.LEFT, padx=5)
-        ttk.Button(button_frame, text="Zavřít", command=self._hide_window).pack(side=tk.LEFT, padx=5)
+        return f"🌐 {self.config.source_lang} → {self.config.target_lang}"
 
     def _setup_window_events(self):
         """Nastaví události okna"""
         self.root.protocol("WM_DELETE_WINDOW", self._hide_window)
-
-        # ESC pro zavření okna
         self.root.bind("<Escape>", lambda e: self._hide_window())
-
-        # Ctrl+Return pro překlad v rámci okna
         self.root.bind("<Control-Return>", lambda e: self._translate())
-
-        # Poznámka: Ctrl+P+P je nyní globální hotkey v _setup_hotkeys()
-
-    def _setup_tray(self):
-        """Nastaví system tray ikonu"""
-        # Vytvoření jednoduché ikony
-        def create_image():
-            width = 64
-            height = 64
-            image = Image.new('RGB', (width, height), color=(33, 150, 243))
-            dc = ImageDraw.Draw(image)
-            dc.rectangle([width // 4, height // 4, width * 3 // 4, height * 3 // 4], fill=(255, 255, 255))
-            return image
-
-        # Menu pro tray
-        menu = pystray.Menu(
-            pystray.MenuItem("Zobrazit", self._show_window),
-            pystray.MenuItem("Nastavení", self._show_settings),
-            pystray.MenuItem("Ukončit", self._quit_app)
-        )
-
-        self.tray_icon = pystray.Icon("transka", create_image(), "Transka", menu)
-
-        # Spuštění tray ikony v separátním vlákně
-        tray_thread = threading.Thread(target=self.tray_icon.run, daemon=True)
-        tray_thread.start()
-
-    def _setup_hotkeys(self):
-        """Nastaví globální klávesové zkratky"""
-        try:
-            # Hlavní zkratka Win+P
-            keyboard.add_hotkey(self.config.hotkey_main, self._handle_main_hotkey)
-
-            # Ctrl+P+P jako alternativní zkratka (globální)
-            # Používáme tracking času pro detekci dvojitého stisku
-            import time
-            self._last_ctrl_p_time_global = 0
-
-            def ctrl_p_handler():
-                """Globální handler pro Ctrl+P"""
-                current_time = time.time()
-                if current_time - self._last_ctrl_p_time_global < 0.5:
-                    # Dvojité stisknutí < 0.5s
-                    self._handle_main_hotkey()
-                    self._last_ctrl_p_time_global = 0
-                else:
-                    # První stisknutí
-                    self._last_ctrl_p_time_global = current_time
-
-            keyboard.add_hotkey('ctrl+p', ctrl_p_handler)
-
-        except Exception as e:
-            print(f"Chyba při nastavování zkratek: {e}")
 
     def _handle_main_hotkey(self):
         """
-        Zpracuje hlavní klávesovou zkratku Win+P (nebo Ctrl+P+P)
-
-        State machine workflow:
+        Zpracuje hlavní klávesovou zkratku (3-step workflow)
         State 0 (HIDDEN) → zobraz okno → State 1 (SHOWN)
         State 1 (SHOWN) → přelož text → State 2 (TRANSLATED)
         State 2 (TRANSLATED) → zkopíruj, vymaž, zavři, restore fokus → State 0 (HIDDEN)
         """
-        if self.window_state == 0:  # HIDDEN
-            # 1. Ctrl+P+P: Otevře okno
+        state = self.workflow.get_state()
+
+        if state == TranslationWorkflow.STATE_HIDDEN:
+            # Krok 1: Otevře okno
             self._show_window()
-            self.window_state = 1
-        elif self.window_state == 1:  # SHOWN
-            # 2. Ctrl+P+P: Přeloží text a zobrazí v okně
-            self._translate_only()
-            self.window_state = 2
-        elif self.window_state == 2:  # TRANSLATED
-            # 3. Ctrl+P+P: Zkopíruje, vymaže, zavře, restore fokus
-            self._copy_and_close()
-            self.window_state = 0
+            self.workflow.set_state(TranslationWorkflow.STATE_SHOWN)
+
+        elif state == TranslationWorkflow.STATE_SHOWN:
+            # Krok 2: Přeloží text
+            self.workflow.translate_with_display(self.root)
+            self.workflow.set_state(TranslationWorkflow.STATE_TRANSLATED)
+
+        elif state == TranslationWorkflow.STATE_TRANSLATED:
+            # Krok 3: Zkopíruje, vymaže, zavře
+            self.workflow.copy_translation_and_clear()
+            self._hide_window()
+            self.workflow.restore_previous_window()
+            self.workflow.reset_state()
 
     def _show_window(self):
         """Zobrazí překladové okno a vycentruje ho na střed obrazovky"""
         if not self.is_visible:
             # Uložení předchozího okna pro restore fokus
-            try:
-                import ctypes
-                self.previous_window = ctypes.windll.user32.GetForegroundWindow()
-            except:
-                self.previous_window = None
+            self.workflow.save_previous_window()
 
             self.root.deiconify()
 
-            # Centrování okna na střed obrazovky
-            self.root.update_idletasks()  # Aktualizace geometrie
+            # Centrování okna
+            self.root.update_idletasks()
             window_width = self.root.winfo_width()
             window_height = self.root.winfo_height()
             screen_width = self.root.winfo_screenwidth()
             screen_height = self.root.winfo_screenheight()
 
-            # Výpočet pozice pro střed
             x = (screen_width - window_width) // 2
             y = (screen_height - window_height) // 2
 
             self.root.geometry(f"{window_width}x{window_height}+{x}+{y}")
-
             self.root.lift()
             self.root.focus_force()
             self.input_text.focus()
             self.is_visible = True
 
     def _hide_window(self):
-        """Skryje překladové okno a resetuje state"""
+        """Skryje překladové okno"""
         if self.is_visible:
             self.root.withdraw()
             self.is_visible = False
-            self.window_state = 0  # Reset do HIDDEN state
+            self.workflow.reset_state()
 
     def _translate(self):
-        """Přeloží text"""
-        input_text = self.input_text.get("1.0", tk.END).strip()
-
-        if not input_text:
-            self.status_label.config(text="Prázdný text", foreground=COLORS["status_warning"])
-            return
-
-        if not self.translator.is_configured():
-            messagebox.showerror("Chyba", "DeepL API není nakonfigurováno. Nastavte API klíč v nastavení.")
-            return
-
-        self.status_label.config(text="Překládám...", foreground=COLORS["status_working"])
-        self.root.update()
-
-        # Překlad v separátním vlákně
-        def translate_thread():
-            result, error = self.translator.translate(
-                input_text,
-                self.config.source_lang,
-                self.config.target_lang
-            )
-
-            # Aktualizace GUI v hlavním vlákně
-            self.root.after(0, lambda: self._handle_translation_result(result, error))
-
-        threading.Thread(target=translate_thread, daemon=True).start()
-
-    def _handle_translation_result(self, result: Optional[str], error: Optional[str]):
-        """Zpracuje výsledek překladu"""
-        if error:
-            self.status_label.config(text=f"Chyba: {error}", foreground=COLORS["status_error"])
-            messagebox.showerror("Chyba překladu", error)
-        else:
-            self.output_text.config(state=tk.NORMAL)
-            self.output_text.delete("1.0", tk.END)
-            self.output_text.insert("1.0", result)
-            self.output_text.config(state=tk.DISABLED)
-
-            self.status_label.config(text="Přeloženo", foreground=COLORS["status_ready"])
-
-            # Aktualizace usage
-            self._update_usage()
-
-    def _translate_only(self):
-        """
-        Přeloží text a zobrazí v output poli (NEUZAVŘE okno, NEKOPÍRUJE)
-        Použito ve State 1 → State 2
-        """
-        input_text = self.input_text.get("1.0", tk.END).strip()
-
-        if not input_text:
-            return
-
-        if not self.translator.is_configured():
-            messagebox.showerror("Chyba", "Překladač není nakonfigurován")
-            return
-
-        self.status_label.config(text="Překládám...", foreground=COLORS["status_working"])
-
-        def translate_thread():
-            result, error = self.translator.translate(
-                input_text,
-                self.config.source_lang,
-                self.config.target_lang
-            )
-            self.root.after(0, lambda: self._handle_translation_result(result, error))
-
-        threading.Thread(target=translate_thread, daemon=True).start()
-
-    def _copy_and_close(self):
-        """
-        Zkopíruje přeložený text do schránky, vymaže input, zavře okno a restore fokus
-        Použito ve State 2 → State 0
-        """
-        # Získání přeloženého textu z output pole
-        translated_text = self.output_text.get("1.0", tk.END).strip()
-
-        if translated_text:
-            # Kopírování do schránky
-            pyperclip.copy(translated_text)
-
-            # Vymazání input pole
-            self.input_text.delete("1.0", tk.END)
-
-            # Vymazání output pole
-            self.output_text.config(state=tk.NORMAL)
-            self.output_text.delete("1.0", tk.END)
-            self.output_text.config(state=tk.DISABLED)
-
-            # Skrytí okna (resetuje window_state na 0)
-            self._hide_window()
-
-            # Restore fokus na předchozí okno
-            if self.previous_window:
-                try:
-                    import ctypes
-                    ctypes.windll.user32.SetForegroundWindow(self.previous_window)
-                except:
-                    pass
-
-    def _translate_and_copy(self):
-        """
-        LEGACY: Přeloží text a zkopíruje do schránky (stará logika)
-        Používá se pro tlačítko "Přeložit" a Ctrl+Enter
-        Také resetuje window_state pro konzistenci
-        """
-        input_text = self.input_text.get("1.0", tk.END).strip()
-
-        if not input_text:
-            return
-
-        if not self.translator.is_configured():
-            return
-
-        # Překlad
-        result, error = self.translator.translate(
-            input_text,
-            self.config.source_lang,
-            self.config.target_lang
-        )
-
-        if result and not error:
-            # Kopírování do schránky
-            pyperclip.copy(result)
-
-            # Aktualizace GUI
-            self.root.after(0, lambda: self._handle_translation_result(result, error))
-
-            # Vymazání input pole po úspěšném překladu
-            self.root.after(50, self._clear_input_only)
-
-            # Skrytí okna (automaticky resetuje window_state na 0)
-            self.root.after(100, self._hide_window)
-
-    def _clear_input_only(self):
-        """Vymaže pouze input pole (pro automatické vymazání po překladu)"""
-        self.input_text.delete("1.0", tk.END)
+        """Přeloží text (tlačítko Přeložit / Ctrl+Enter)"""
+        self.workflow.translate_full(self.root)
 
     def _clear(self):
         """Vymaže textová pole"""
-        self.input_text.delete("1.0", tk.END)
-        self.output_text.config(state=tk.NORMAL)
-        self.output_text.delete("1.0", tk.END)
-        self.output_text.config(state=tk.DISABLED)
-        self.status_label.config(text="Připraveno", foreground=COLORS["text_primary"])
-        self.input_text.focus()
+        self.workflow.clear_all()
+
+    def _update_status(self, text: str, color: str):
+        """Aktualizuje status label"""
+        self.status_label.config(text=text, foreground=color)
 
     def _update_usage(self):
         """Aktualizuje počítadlo znaků"""
@@ -499,13 +212,13 @@ class TranslatorApp:
             usage_info, error = self.translator.get_usage()
 
             if usage_info:
-                # Kontrola, zda se blížíme limitu
+                # Kontrola limitu
                 if usage_info.character_count >= self.config.usage_warning_threshold:
-                    color = COLORS["status_error"]  # Červená
+                    color = COLORS["status_error"]
                 elif usage_info.usage_percentage > 80:
-                    color = COLORS["status_warning"]  # Oranžová
+                    color = COLORS["status_warning"]
                 else:
-                    color = COLORS["status_ready"]  # Zelená
+                    color = COLORS["status_ready"]
 
                 self.root.after(
                     0,
@@ -527,32 +240,41 @@ class TranslatorApp:
             elif error:
                 self.root.after(
                     0,
-                    lambda: self.usage_label.config(text=f"Usage: {error}", foreground=COLORS["status_error"])
+                    lambda: self.usage_label.config(
+                        text=f"Usage: {error}",
+                        foreground=COLORS["status_error"]
+                    )
                 )
 
         if self.translator.is_configured():
             threading.Thread(target=update_thread, daemon=True).start()
 
     def _on_settings_saved(self):
-        """Callback po uložení nastavení - aktualizuje GUI"""
-        # Re-kreovat překladač při změně služby
+        """Callback po uložení nastavení"""
+        # Re-kreovat překladač
         self.translator = self._create_translator()
-        # Aktualizace zobrazení překladače
+        self.workflow.update_translator(self.translator)
+        self.workflow.update_languages(self.config.source_lang, self.config.target_lang)
+
+        # Aktualizace GUI
         self.translator_label.config(text=self._get_translator_display())
-        # Aktualizace zobrazení jazyků
         self.lang_label.config(text=self._get_language_display())
-        # Aktualizace usage
         self._update_usage()
 
     def _show_settings(self):
         """Zobrazí okno s nastavením"""
-        SettingsWindow(self.root, self, self.config, self.translator, self._on_settings_saved)
+        SettingsWindow(
+            self.root,
+            self,
+            self.config,
+            self.translator,
+            self._on_settings_saved
+        )
 
     def _quit_app(self):
         """Ukončí aplikaci"""
-        if self.tray_icon:
-            self.tray_icon.stop()
-        keyboard.unhook_all()
+        self.tray_manager.stop()
+        self.hotkey_manager.unregister_all()
         self.root.quit()
         sys.exit(0)
 

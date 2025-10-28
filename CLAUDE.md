@@ -14,21 +14,34 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - `GoogleTranslator` (google_translator.py) - Google Translate implementace
 - **Přepínání** mezi překladači za běhu bez restartu (live reload)
 
-#### 2. **GUI moduly**
-- `app.py` - hlavní aplikace `TranslatorApp` (579 řádků)
-  - 3-step workflow: otevři → přelož → zkopíruj+zavři
-  - System tray integrace
-  - Globální hotkeys registrace
-  - Použití ThemeManager pro styling
-- `settings_window.py` - samostatný modul pro nastavení (192 řádků)
+#### 2. **GUI moduly** (čistá architektura - každý modul má jednu zodpovědnost)
+- `app.py` - **orchestrátor aplikace (301 řádků)** ⭐
+  - Minimální logika - pouze koordinace managerů
+  - Dependency injection pattern
+  - 64% redukce kódu z původních 843 řádků
+- `gui_builder.py` - GUI komponenty (245 řádků)
+  - Builder pattern pro vytvoření widgets
+  - Oddělení GUI struktury od business logiky
+  - Callback injection pro event handling
+- `translation_workflow.py` - překlad workflow (194 řádků)
+  - State machine pro 3-step workflow
+  - Threading management pro async překlady
+  - Clipboard operations + focus management
+- `settings_window.py` - nastavení (192 řádků)
   - `SettingsWindow` třída
-  - Live reload podpory (změny se aplikují okamžitě)
+  - Live reload podpory
   - Test API funkce
-- `theme_manager.py` - správa dark theme (147 řádků)
-  - `ThemeManager` třída
-  - Aplikace dark titlebar (Windows 11/10)
-  - Font management (Fira Code, Consolas fallback)
-  - TTK styles konfigurace pro dark mode
+- `theme_manager.py` - dark theme (147 řádků)
+  - Centralizovaný styling
+  - Dark titlebar (Windows 11/10)
+  - Font management s fallback
+- `hotkey_manager.py` - klávesové zkratky (81 řádků)
+  - Globální hotkeys registrace
+  - Double-press detection (Ctrl+P+P)
+  - Dynamic hotkey update
+- `tray_manager.py` - system tray (72 řádků)
+  - System tray ikona + menu
+  - Threading pro tray loop
 
 #### 3. **GUI workflow** (3-step process)
 Hlavní logika v `app.py::TranslatorApp`:
