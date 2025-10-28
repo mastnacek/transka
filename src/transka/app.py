@@ -3,7 +3,7 @@
 DeepL Translator - Desktop aplikace pro rychlý překlad
 """
 import tkinter as tk
-from tkinter import ttk, messagebox, scrolledtext
+from tkinter import ttk, messagebox, scrolledtext, font as tkfont
 import threading
 import pyperclip
 import keyboard
@@ -15,6 +15,7 @@ import sys
 from transka.config import Config
 from transka.deepl_translator import DeepLTranslator
 from transka.base_translator import UsageInfo
+from transka.theme import COLORS, FONTS
 
 
 class SettingsWindow:
@@ -174,6 +175,9 @@ class TranslatorApp:
         self.root.title("DeepL Translator")
         self.root.geometry(f"{self.config.window_width}x{self.config.window_height}")
 
+        # Modern Dark Theme
+        self._apply_theme()
+
         # Skrytí okna při startu
         self.root.withdraw()
 
@@ -195,6 +199,49 @@ class TranslatorApp:
         # Aktualizace usage při startu
         self._update_usage()
 
+    def _apply_theme(self):
+        """Aplikuje modern dark theme s glow efekty"""
+        # Pozadí hlavního okna
+        self.root.configure(bg=COLORS["bg_dark"])
+
+        # Vytvoření Fira Code fontu
+        try:
+            self.mono_font = tkfont.Font(family="Fira Code", size=FONTS["size_normal"])
+        except:
+            # Fallback na Consolas pokud Fira Code není k dispozici
+            self.mono_font = tkfont.Font(family="Consolas", size=FONTS["size_normal"])
+
+        self.sans_font = tkfont.Font(family="Segoe UI", size=FONTS["size_normal"])
+        self.sans_font_bold = tkfont.Font(family="Segoe UI", size=FONTS["size_normal"], weight="bold")
+
+        # TTK Style pro dark theme
+        style = ttk.Style()
+        style.theme_use('clam')  # Používáme 'clam' theme jako základ
+
+        # Frame style
+        style.configure('TFrame', background=COLORS["bg_dark"])
+
+        # Label style
+        style.configure('TLabel',
+            background=COLORS["bg_dark"],
+            foreground=COLORS["text_primary"],
+            font=self.sans_font
+        )
+
+        # Button style s glow efektem
+        style.configure('TButton',
+            background=COLORS["bg_button"],
+            foreground=COLORS["accent_cyan"],
+            bordercolor=COLORS["border"],
+            focuscolor=COLORS["border_focus"],
+            font=self.sans_font_bold,
+            relief=tk.FLAT
+        )
+        style.map('TButton',
+            background=[('active', COLORS["bg_button_hover"]), ('pressed', COLORS["bg_darker"])],
+            foreground=[('active', COLORS["accent_cyan"]), ('pressed', COLORS["accent_purple"])]
+        )
+
     def _create_widgets(self):
         """Vytvoří GUI komponenty"""
         # Hlavní frame
@@ -209,24 +256,58 @@ class TranslatorApp:
         main_frame.rowconfigure(3, weight=1)
 
         # Input label a textové pole
-        ttk.Label(main_frame, text="Text k překladu:").grid(row=0, column=0, sticky=tk.W, pady=(0, 5))
-        self.input_text = scrolledtext.ScrolledText(main_frame, height=8, wrap=tk.WORD)
+        input_label = ttk.Label(main_frame, text="Text k překladu:")
+        input_label.grid(row=0, column=0, sticky=tk.W, pady=(0, 5))
+
+        self.input_text = scrolledtext.ScrolledText(
+            main_frame,
+            height=8,
+            wrap=tk.WORD,
+            font=self.mono_font,
+            bg=COLORS["bg_input"],
+            fg=COLORS["text_primary"],
+            insertbackground=COLORS["accent_cyan"],  # Kurzor
+            selectbackground=COLORS["accent_cyan"],
+            selectforeground=COLORS["bg_dark"],
+            relief=tk.FLAT,
+            borderwidth=2,
+            highlightthickness=2,
+            highlightcolor=COLORS["border_focus"],
+            highlightbackground=COLORS["border"]
+        )
         self.input_text.grid(row=1, column=0, sticky=(tk.W, tk.E, tk.N, tk.S), pady=(0, 10))
         self.input_text.focus()
 
         # Output label a textové pole
-        ttk.Label(main_frame, text="Přeložený text:").grid(row=2, column=0, sticky=tk.W, pady=(0, 5))
-        self.output_text = scrolledtext.ScrolledText(main_frame, height=8, wrap=tk.WORD, state=tk.DISABLED)
+        output_label = ttk.Label(main_frame, text="Přeložený text:")
+        output_label.grid(row=2, column=0, sticky=tk.W, pady=(0, 5))
+
+        self.output_text = scrolledtext.ScrolledText(
+            main_frame,
+            height=8,
+            wrap=tk.WORD,
+            state=tk.DISABLED,
+            font=self.mono_font,
+            bg=COLORS["bg_darker"],
+            fg=COLORS["text_primary"],
+            selectbackground=COLORS["accent_purple"],
+            selectforeground=COLORS["bg_dark"],
+            relief=tk.FLAT,
+            borderwidth=2,
+            highlightthickness=2,
+            highlightcolor=COLORS["accent_purple"],
+            highlightbackground=COLORS["border"]
+        )
         self.output_text.grid(row=3, column=0, sticky=(tk.W, tk.E, tk.N, tk.S), pady=(0, 10))
 
         # Status bar s počítadlem znaků
         status_frame = ttk.Frame(main_frame)
         status_frame.grid(row=4, column=0, sticky=(tk.W, tk.E), pady=(5, 0))
 
-        self.status_label = ttk.Label(status_frame, text="Připraveno")
+        self.status_label = ttk.Label(status_frame, text="Připraveno", foreground=COLORS["text_primary"])
         self.status_label.pack(side=tk.LEFT)
 
-        self.usage_label = ttk.Label(status_frame, text="Načítám usage...", foreground="gray")
+        self.usage_label = ttk.Label(status_frame, text="Načítám usage...", foreground=COLORS["text_secondary"])
         self.usage_label.pack(side=tk.RIGHT)
 
         # Tlačítka
@@ -314,14 +395,14 @@ class TranslatorApp:
         input_text = self.input_text.get("1.0", tk.END).strip()
 
         if not input_text:
-            self.status_label.config(text="Prázdný text", foreground="orange")
+            self.status_label.config(text="Prázdný text", foreground=COLORS["status_warning"])
             return
 
         if not self.translator.is_configured():
             messagebox.showerror("Chyba", "DeepL API není nakonfigurováno. Nastavte API klíč v nastavení.")
             return
 
-        self.status_label.config(text="Překládám...", foreground="blue")
+        self.status_label.config(text="Překládám...", foreground=COLORS["status_working"])
         self.root.update()
 
         # Překlad v separátním vlákně
@@ -340,7 +421,7 @@ class TranslatorApp:
     def _handle_translation_result(self, result: Optional[str], error: Optional[str]):
         """Zpracuje výsledek překladu"""
         if error:
-            self.status_label.config(text=f"Chyba: {error}", foreground="red")
+            self.status_label.config(text=f"Chyba: {error}", foreground=COLORS["status_error"])
             messagebox.showerror("Chyba překladu", error)
         else:
             self.output_text.config(state=tk.NORMAL)
@@ -348,7 +429,7 @@ class TranslatorApp:
             self.output_text.insert("1.0", result)
             self.output_text.config(state=tk.DISABLED)
 
-            self.status_label.config(text="Přeloženo", foreground="green")
+            self.status_label.config(text="Přeloženo", foreground=COLORS["status_ready"])
 
             # Aktualizace usage
             self._update_usage()
@@ -386,7 +467,7 @@ class TranslatorApp:
         self.output_text.config(state=tk.NORMAL)
         self.output_text.delete("1.0", tk.END)
         self.output_text.config(state=tk.DISABLED)
-        self.status_label.config(text="Připraveno", foreground="black")
+        self.status_label.config(text="Připraveno", foreground=COLORS["text_primary"])
         self.input_text.focus()
 
     def _update_usage(self):
@@ -397,11 +478,11 @@ class TranslatorApp:
             if usage_info:
                 # Kontrola, zda se blížíme limitu
                 if usage_info.character_count >= self.config.usage_warning_threshold:
-                    color = "red"
+                    color = COLORS["status_error"]  # Červená
                 elif usage_info.usage_percentage > 80:
-                    color = "orange"
+                    color = COLORS["status_warning"]  # Oranžová
                 else:
-                    color = "green"
+                    color = COLORS["status_ready"]  # Zelená
 
                 self.root.after(
                     0,
@@ -423,7 +504,7 @@ class TranslatorApp:
             elif error:
                 self.root.after(
                     0,
-                    lambda: self.usage_label.config(text=f"Usage: {error}", foreground="red")
+                    lambda: self.usage_label.config(text=f"Usage: {error}", foreground=COLORS["status_error"])
                 )
 
         if self.translator.is_configured():
