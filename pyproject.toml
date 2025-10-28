@@ -18,9 +18,18 @@ google = [
     "googletrans>=4.0.0rc1",
 ]
 
+[project.scripts]
+deepl-translator = "transka.app:main"
+
 [tool.uv]
 dev-dependencies = []
 
+[tool.setuptools]
+packages = ["transka"]
+
+[tool.setuptools.package-dir]
+"" = "src"
+
 [build-system]
-requires = ["hatchling"]
-build-backend = "hatchling.build"
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"

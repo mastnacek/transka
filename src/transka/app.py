@@ -11,9 +11,9 @@ from PIL import Image, ImageDraw
 from typing import Optional
 import sys
 
-from src.config import Config
-from src.deepl_translator import DeepLTranslator
-from src.base_translator import UsageInfo
+from transka.config import Config
+from transka.deepl_translator import DeepLTranslator
+from transka.base_translator import UsageInfo
 
 
 class SettingsWindow:

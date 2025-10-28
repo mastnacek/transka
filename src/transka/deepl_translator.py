@@ -4,7 +4,7 @@ DeepL API překladač - implementace BaseTranslator
 import deepl
 from typing import Optional, Tuple, List
 
-from src.base_translator import BaseTranslator, UsageInfo
+from transka.base_translator import BaseTranslator, UsageInfo
 
 
 class DeepLTranslator(BaseTranslator):

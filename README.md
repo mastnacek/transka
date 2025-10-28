@@ -24,17 +24,16 @@ Jednoduchá desktop aplikace pro rychlý překlad pomocí DeepL API s podporou s
 ### Varianta A: Pomocí UV (doporučeno)
 
 1. **Nainstalujte UV** (pokud ještě nemáte):
-```powershell
+```bash
 # PowerShell
 irm https://astral.sh/uv/install.ps1 | iex
+
+# Nebo curl (Git Bash)
+curl -LsSf https://astral.sh/uv/install.sh | sh
 ```
 
 2. **Spusťte instalační script**:
 ```bash
-# PowerShell
-.\install.ps1
-
-# Nebo CMD
 install.bat
 ```
 
@@ -45,10 +44,6 @@ DEEPL_API_KEY=your-actual-api-key-here
 
 4. **Spusťte aplikaci**:
 ```bash
-# PowerShell (bez konzole)
-.\start.ps1
-
-# Nebo CMD
 start.bat
 ```
 
@@ -78,10 +73,10 @@ DEEPL_API_KEY=your-actual-api-key-here
 5. **Spusťte aplikaci**:
 ```bash
 # Bez konzole (doporučeno)
-pythonw -m src.main
+pythonw -m transka
 
 # S konzolí (pro debugging)
-python -m src.main
+python -m transka
 ```
 
 ## 🎯 Jak získat DeepL API klíč
@@ -95,20 +90,22 @@ python -m src.main
 
 ### Pomocí UV:
 ```bash
-# PowerShell (bez konzole)
-.\start.ps1
-
-# CMD
 start.bat
 ```
 
 ### Klasicky:
 ```bash
 # Bez konzole (doporučeno - aplikace běží na pozadí)
-pythonw -m src.main
+pythonw -m transka
 
 # S konzolí (pro debugging)
-python -m src.main
+python -m transka
+```
+
+### Po instalaci jako package:
+```bash
+# Spustitelný příkaz (po: uv sync nebo pip install -e .)
+deepl-translator
 ```
 
 Aplikace se spustí v system tray. Klikněte na ikonu pro otevření menu.
@@ -159,19 +156,19 @@ Formát: `15,234 / 500,000 znaků (3.0%)`
 ```
 transka/
 ├── src/
-│   ├── __init__.py           # Package inicializace
-│   ├── main.py               # Hlavní aplikace (GUI, tray, zkratky)
-│   ├── config.py             # Správa konfigurace
-│   ├── base_translator.py    # Abstraktní rozhraní pro překladače
-│   ├── deepl_translator.py   # DeepL API implementace
-│   ├── google_translator.py  # Google Translate (připraveno)
-│   └── translator.py         # Legacy wrapper (deprecated)
-├── install.bat               # Instalační script (Windows CMD)
-├── install.ps1               # Instalační script (PowerShell)
-├── start.bat                 # Spouštěcí script (CMD, bez konzole)
-├── start.ps1                 # Spouštěcí script (PowerShell, bez konzole)
-├── pyproject.toml            # UV/pip konfigurace
-├── requirements.txt          # Python závislosti (pip)
+│   └── transka/              # Hlavní package (Python best practice)
+│       ├── __init__.py       # Package exports (__all__, __version__)
+│       ├── __main__.py       # Entry point pro: python -m transka
+│       ├── app.py            # Hlavní aplikace (GUI, tray, zkratky)
+│       ├── config.py         # Správa konfigurace
+│       ├── base_translator.py    # Abstraktní rozhraní pro překladače
+│       ├── deepl_translator.py   # DeepL API implementace
+│       ├── google_translator.py  # Google Translate (připraveno)
+│       └── translator.py     # Legacy wrapper (deprecated)
+├── install.bat               # Instalační script (Windows)
+├── start.bat                 # Spouštěcí script (bez konzole)
+├── pyproject.toml            # Modern Python package konfigurace
+├── requirements.txt          # Python závislosti (pip fallback)
 ├── .env                      # Konfigurace (API klíč) - gitignored
 ├── .env.example              # Příklad konfigurace
 ├── config.json               # Uživatelské nastavení - gitignored
@@ -185,19 +182,23 @@ transka/
 
 ## 🔮 Budoucí rozšíření a příprava
 
-### Připraveno (abstrakce implementována):
-- ✅ **Architektura pro více překladačů**: BaseTranslator abstrakce
-- ✅ **Google Translate placeholder**: Připraveno pro budoucí implementaci
-- ✅ **UV package manager**: Moderní instalace a správa závislostí
-- ✅ **Spouštění bez konzole**: .bat a .ps1 scripty
+### ✅ Připraveno (implementováno):
+- **Python best practices struktura**: `src/transka/` package layout
+- **Console scripts**: `deepl-translator` příkaz po instalaci
+- **Module execution**: `python -m transka` podpora
+- **Architektura pro více překladačů**: BaseTranslator abstrakce
+- **Google Translate placeholder**: Připraveno pro budoucí implementaci
+- **UV package manager**: Moderní instalace a správa závislostí
+- **Spouštění bez konzole**: .bat script
 
-### Plánováno:
+### 📋 Plánováno:
 - [ ] **Automatické přepnutí na Google Translate** po dosažení 490k znaků DeepL limitu
 - [ ] **Google Translate implementace**: Dokončení google_translator.py
 - [ ] **Historie překladů**: Ukládání posledních N překladů
 - [ ] **Podpora více překladačů současně**: Výběr v nastavení
 - [ ] **Export/import nastavení**: Backup konfigurace
 - [ ] **Autostart s Windows**: Přidání do registry
+- [ ] **Systémový installer**: .exe pomocí PyInstaller/cx_Freeze
 
 ## 📄 Licence
 

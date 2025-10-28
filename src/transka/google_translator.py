@@ -4,7 +4,7 @@ PLACEHOLDER - připraveno pro budoucí implementaci
 """
 from typing import Optional, Tuple, List
 
-from src.base_translator import BaseTranslator, UsageInfo
+from transka.base_translator import BaseTranslator, UsageInfo
 
 
 class GoogleTranslator(BaseTranslator):
