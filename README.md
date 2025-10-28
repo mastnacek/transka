@@ -394,7 +394,7 @@ transka/
 
 ### ✅ Implementováno:
 - **Python best practices struktura**: `src/transka/` package layout
-- **Console scripts**: `deepl-translator` příkaz po instalaci
+- **Console scripts**: `transka` příkaz po instalaci
 - **Module execution**: `python -m transka` podpora
 - **Architektura pro více překladačů**: BaseTranslator abstrakce
 - **Google Translate implementace**: Plně funkční pomocí `googletrans` knihovny
@@ -403,14 +403,27 @@ transka/
 - **UV package manager**: Moderní instalace a správa závislostí
 - **Spouštění bez konzole**: .bat script
 - **Dark theme**: Modern cyberpunk design s Fira Code fontem
+- **Modulární architektura**: Clean Code s 7 specializovanými moduly
+- **State machine workflow**: 3-step překlad proces
 
 ### 📋 Plánováno:
+
+#### 🔥 Vysoká priorita (klávesové zkratky):
+- [ ] **Přepnutí směru jazyků** - globální zkratka (pravděpodobně Ctrl+S+S)
+  - Rychlá změna CS→EN na EN→CS a zpět
+  - Bez nutnosti otevírat Settings
+- [ ] **Vymazání input pole** - globální zkratka (pravděpodobně Ctrl+C+C)
+  - Rychlé vyčištění textu k překladu
+  - Alternativa k tlačítku "Vymazat"
+
+#### 🚀 Další features:
 - [ ] **Automatické přepnutí na Google Translate** po dosažení 490k znaků DeepL limitu
-- [ ] **Historie překladů**: Ukládání posledních N překladů
+- [ ] **Historie překladů**: Ukládání posledních N překladů (Ctrl+H+H pro otevření?)
 - [ ] **Export/import nastavení**: Backup konfigurace
 - [ ] **Autostart s Windows**: Přidání do registry
 - [ ] **Systémový installer**: .exe pomocí PyInstaller/cx_Freeze
 - [ ] **Rozšíření jazyků**: Podpora všech jazyků z googletrans.LANGUAGES
+- [ ] **Automatická detekce jazyka**: Inteligentní swap CS↔EN podle vstupního textu
 
 ## 📄 Licence
 
