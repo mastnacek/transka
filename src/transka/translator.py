@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """
 DeepL API komunikace a správa překladů
 """

@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """
 Entry point pro spuštění jako modul: python -m transka
 """

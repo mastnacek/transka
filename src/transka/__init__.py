@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """
 DeepL Translator - Desktop aplikace pro rychlý překlad
 """

@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """
 Google Translate API překladač - implementace BaseTranslator
 PLACEHOLDER - připraveno pro budoucí implementaci

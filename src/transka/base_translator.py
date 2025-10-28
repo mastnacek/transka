@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """
 Abstraktní rozhraní pro překladače
 Umožňuje snadné přepínání mezi DeepL a Google Translate
