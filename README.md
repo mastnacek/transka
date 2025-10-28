@@ -1,6 +1,17 @@
 # Transka - Desktop Translator
 
+**Rychlá desktopová aplikace pro okamžitý překlad textů** - ideální pro překlad promptů pro AI asistenty (Claude, ChatGPT) a práci s kódem.
+
 Moderní desktop aplikace pro rychlý překlad s podporou **DeepL** a **Google Translate** API, dark theme a intuitivními klávesovými zkratkami.
+
+## 🎯 Účel aplikace
+
+**Transka vznikla pro rychlý překlad textů při práci s AI:**
+- ✅ **Překlad promptů**: Rychle přeložit české zadání pro anglické AI (Claude Code, ChatGPT)
+- ✅ **Překlad odpovědí AI**: Okamžitý překlad anglických odpovědí do češtiny
+- ✅ **Práce s kódem**: Překlad komentářů, dokumentace, commit messages
+- ✅ **3-krokový workflow**: Otevři (Win+P) → Přelož (Win+P) → Zkopíruj do schránky (Win+P)
+- ✅ **System tray**: Běží na pozadí, okamžitě dostupný globální zkratkou
 
 ## 🚀 Funkce
 
@@ -165,6 +176,61 @@ Aplikace se spustí v system tray. Klikněte na ikonu pro otevření menu.
 
 **💡 Tip**: Nový workflow umožňuje zkontrolovat překlad před kopírováním!
 
+## 💼 Praktické použití (Use Cases)
+
+### 1. Překlad promptu pro AI asistenta (Claude Code, ChatGPT)
+
+**Scénář:** Chcete poslat českému zadání anglickému AI asistentovi.
+
+```
+1. Napíšete v Czechu: "Vytvoř mi funkci na validaci emailu"
+2. Ctrl+P+P → otevře Transka
+3. Ctrl+V → vložíte text
+4. Ctrl+P+P → přeloží: "Create a function for email validation"
+5. Ctrl+P+P → zkopíruje do schránky + zavře okno
+6. Ctrl+V → vložíte překlad do AI chatu
+```
+
+### 2. Překlad odpovědi AI do češtiny
+
+**Scénář:** AI odpověděl anglicky a chcete to rychle přeložit.
+
+```
+1. Označíte anglickou odpověď AI
+2. Ctrl+C → zkopírujete
+3. Ctrl+P+P → otevře Transka (text se automaticky vloží)
+4. Ctrl+P+P → přeloží do češtiny
+5. Ctrl+P+P → zkopíruje překlad
+6. Máte český překlad v clipboardu
+```
+
+### 3. Překlad commit message
+
+**Scénář:** Píšete commit v angličtině, ale myslíte česky.
+
+```
+1. Myslíte: "Oprava chyby v autentifikaci"
+2. Ctrl+P+P → otevře Transka
+3. Napíšete česky
+4. Ctrl+P+P → přeloží: "Fix authentication bug"
+5. Ctrl+P+P → zkopíruje
+6. git commit -m <Ctrl+V>
+```
+
+### 4. Překlad dokumentace/komentářů
+
+**Scénář:** Čtete anglickou dokumentaci a potřebujete rychlý překlad.
+
+```
+1. Označíte text v dokumentaci
+2. Ctrl+C
+3. Ctrl+P+P → otevře Transka
+4. Ctrl+V → vloží
+5. Ctrl+P+P → přeloží
+6. Přečtete překlad v okně (okno zůstane otevřené)
+7. ESC → zavře okno
+```
+
 ### System Tray Menu:
 - **Zobrazit**: Otevře překladové okno
 - **Nastavení**: Otevře okno nastavení
@@ -189,30 +255,132 @@ Formát: `15,234 / 500,000 znaků (3.0%)`
 - **keyboard**: Globální klávesové zkratky
 - **pyperclip**: Práce se schránkou
 
-## 📝 Struktura projektu
+## 📝 Architektura projektu (Clean Code)
+
+**Transka používá čistou modulární architekturu** s oddělením zodpovědností:
 
 ```
 transka/
-├── src/
-│   └── transka/              # Hlavní package (Python best practice)
-│       ├── __init__.py       # Package exports (__all__, __version__)
-│       ├── __main__.py       # Entry point pro: python -m transka
-│       ├── app.py            # Hlavní aplikace (GUI, tray, zkratky)
-│       ├── config.py         # Správa konfigurace
-│       ├── base_translator.py    # Abstraktní rozhraní pro překladače
-│       ├── deepl_translator.py   # DeepL API implementace
-│       ├── google_translator.py  # Google Translate implementace (googletrans)
-│       ├── theme.py          # Dark theme konfigurace (barvy, fonty)
-│       └── translator.py     # Legacy wrapper (deprecated)
-├── install.bat               # Instalační script (Windows)
-├── start.bat                 # Spouštěcí script (bez konzole)
+├── src/transka/
+│   ├── app.py (301 řádků) ⭐ ORCHESTRÁTOR
+│   │   └── TranslatorApp - koordinuje všechny managery
+│   │
+│   ├── GUI Layer:
+│   │   ├── gui_builder.py (245 řádků)
+│   │   │   └── GUIBuilder - Builder pattern pro vytvoření widgets
+│   │   ├── settings_window.py (192 řádků)
+│   │   │   └── SettingsWindow - okno nastavení s live reload
+│   │   └── theme_manager.py (147 řádků)
+│   │       └── ThemeManager - dark theme + Windows titlebar
+│   │
+│   ├── Business Logic:
+│   │   └── translation_workflow.py (194 řádků)
+│   │       └── TranslationWorkflow - state machine pro 3-step workflow
+│   │           ├── STATE_HIDDEN → STATE_SHOWN → STATE_TRANSLATED
+│   │           ├── Threading pro async překlady
+│   │           └── Clipboard operations + focus management
+│   │
+│   ├── System Integration:
+│   │   ├── hotkey_manager.py (81 řádků)
+│   │   │   └── HotkeyManager - globální zkratky + double-press detection
+│   │   └── tray_manager.py (72 řádků)
+│   │       └── TrayManager - system tray ikona + menu
+│   │
+│   └── Translation Core:
+│       ├── base_translator.py (93 řádků)
+│       │   └── BaseTranslator - abstraktní rozhraní (Strategy Pattern)
+│       ├── deepl_translator.py (144 řádků)
+│       │   └── DeepLTranslator - DeepL API implementace
+│       ├── google_translator.py (168 řádků)
+│       │   └── GoogleTranslator - Google Translate implementace
+│       └── config.py (124 řádků)
+│           └── Config - správa konfigurace (JSON + .env)
+│
+├── install.bat               # Instalační script (uv sync)
+├── start.bat                 # Spouštěcí script (pythonw bez konzole)
 ├── pyproject.toml            # Modern Python package konfigurace
 ├── requirements.txt          # Python závislosti (pip fallback)
-├── .env                      # Konfigurace (API klíč) - gitignored
-├── .env.example              # Příklad konfigurace
+├── .env                      # DeepL API klíč - gitignored
 ├── config.json               # Uživatelské nastavení - gitignored
 └── README.md                 # Dokumentace
 ```
+
+### 🏗️ Design Patterns použité:
+
+1. **Dependency Injection** - app.py injektuje závislosti do managerů
+2. **Builder Pattern** - GUIBuilder pro vytvoření GUI komponent
+3. **Strategy Pattern** - BaseTranslator → DeepL/Google implementace
+4. **State Machine** - TranslationWorkflow (3 stavy workflow)
+5. **Single Responsibility** - každý modul má jednu zodpovědnost
+
+### 🔧 Detailní popis modulů:
+
+#### **app.py** - Orchestrátor (301 řádků)
+- `TranslatorApp.__init__()` - inicializace všech managerů
+- `_handle_main_hotkey()` - state machine pro 3-step workflow
+- `_show_window()` / `_hide_window()` - window management + centrování
+- `_update_usage()` - threading pro async update usage statistik
+- `_on_settings_saved()` - callback pro live reload nastavení
+
+#### **translation_workflow.py** - Business logika (194 řádků)
+- `TranslationWorkflow` - hlavní třída pro překlad workflow
+  - `translate_with_display()` - překlad bez kopírování (krok 2)
+  - `translate_full()` - kompletní překlad (tlačítko Přeložit)
+  - `copy_translation_and_clear()` - kopírování + cleanup (krok 3)
+  - `save_previous_window()` / `restore_previous_window()` - focus management
+  - State machine: `STATE_HIDDEN` → `STATE_SHOWN` → `STATE_TRANSLATED`
+
+#### **hotkey_manager.py** - Klávesové zkratky (81 řádků)
+- `HotkeyManager` - správa globálních zkratek
+  - `register_hotkeys()` - registrace Win+P a Ctrl+P+P
+  - `_handle_ctrl_p()` - double-press detection (<0.5s mezi stisky)
+  - `update_main_hotkey()` - dynamická změna zkratky (live reload)
+  - `unregister_all()` - cleanup při ukončení
+
+#### **gui_builder.py** - GUI konstrukce (245 řádků)
+- `GUIBuilder` - Builder pattern pro vytvoření GUI
+  - `build()` - hlavní metoda vytváření widgets
+  - `_create_header()` - header s překladačem + jazyky
+  - `_create_input_field()` / `_create_output_field()` - textová pole
+  - `_create_status_bar()` - status + usage label
+  - `_create_buttons()` - tlačítka s callbacky
+
+#### **tray_manager.py** - System tray (72 řádků)
+- `TrayManager` - správa system tray ikony
+  - `start()` - spustí tray v separátním threadu
+  - `_create_icon_image()` - generuje ikonu programově (PIL)
+  - Menu: Zobrazit / Nastavení / Ukončit
+
+#### **theme_manager.py** - Dark theme (147 řádků)
+- `ThemeManager` - správa aplikačního stylu
+  - `apply_theme()` - aplikuje kompletní dark theme
+  - `_apply_dark_titlebar()` - Windows 11/10 dark titlebar (ctypes)
+  - `_create_fonts()` - Fira Code + Consolas fallback
+  - `_configure_ttk_styles()` - TTK widgets styling
+
+#### **settings_window.py** - Nastavení (192 řádků)
+- `SettingsWindow` - okno pro konfiguraci
+  - `_save_settings()` - live reload (okamžitá aplikace změn)
+  - `_test_api()` - test DeepL API připojení
+  - Dynamic hotkey update (přeregistrace zkratky)
+
+#### **base_translator.py** - Abstrakce (93 řádků)
+- `BaseTranslator` - abstraktní rozhraní (ABC)
+  - `translate()` - hlavní překladová metoda
+  - `get_usage()` - získání usage statistik
+  - `is_configured()` - kontrola konfigurace
+- `UsageInfo` - dataclass pro usage statistiky
+
+#### **deepl_translator.py** / **google_translator.py**
+- Implementace `BaseTranslator` pro DeepL / Google
+- Error handling + fallback logika
+- Google Translate je zdarma (neomezené použití)
+
+#### **config.py** - Konfigurace (124 řádků)
+- `Config` - správa nastavení (JSON + .env)
+  - `load()` / `save()` - persistentní uložení
+  - `set()` / `get()` - getter/setter pro konfiguraci
+  - `set_api_key()` - secure storage pro API klíč (.env)
 
 ## ⚠️ Známé problémy
 
