@@ -1,5 +1,5 @@
 [project]
-name = "deepl-translator"
+name = "Transka"
 version = "1.0.0"
 description = "Desktop aplikace pro rychlý překlad s DeepL API"
 readme = "README.md"
@@ -15,7 +15,7 @@ dependencies = [
 ]
 
 [project.scripts]
-deepl-translator = "transka.app:main"
+transka = "transka.app:main"
 
 [tool.uv]
 dev-dependencies = []

@@ -113,7 +113,7 @@ python -m transka
 ### Po instalaci jako package:
 ```bash
 # Spustitelný příkaz (po: uv sync nebo pip install -e .)
-deepl-translator
+transka
 ```
 
 Aplikace se spustí v system tray. Klikněte na ikonu pro otevření menu.
