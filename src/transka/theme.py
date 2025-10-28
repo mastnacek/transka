@@ -13,12 +13,13 @@ COLORS = {
     "bg_button_hover": "#353535",   # Tlačítko hover
 
     # Text
-    "text_primary": "#f0f0f0",      # Hlavní text (světlejší)
+    "text_primary": "#fffacd",      # Hlavní text (lehce žlutá - lemon chiffon)
     "text_secondary": "#999999",    # Sekundární text
     "text_muted": "#666666",        # Ztlumený text
 
     # Accent barvy s glow efektem
-    "accent_cyan": "#00d9ff",       # Cyan - hlavní accent
+    "accent_cyan": "#00d9ff",       # Cyan
+    "accent_yellow": "#ffd700",     # Yellow - gold (glow efekt)
     "accent_purple": "#b362ff",     # Purple
     "accent_green": "#50fa7b",      # Green - success
     "accent_red": "#ff5555",        # Red - error

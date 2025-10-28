@@ -243,6 +243,14 @@ class TranslatorApp:
         else:  # default: deepl
             return DeepLTranslator(self.config.api_key)
 
+    def _get_translator_display(self) -> str:
+        """Vrátí název aktivního překladače"""
+        service = self.config.translator_service.upper()
+        if service == "GOOGLE":
+            return "🔵 Google Translate"
+        else:  # DEEPL
+            return "🟢 DeepL"
+
     def _get_language_display(self) -> str:
         """Vrátí formátovaný string s aktuálními jazyky"""
         source = self.config.source_lang
@@ -253,6 +261,18 @@ class TranslatorApp:
         """Aplikuje modern dark theme s glow efekty"""
         # Pozadí hlavního okna
         self.root.configure(bg=COLORS["bg_dark"])
+
+        # Dark titlebar pro Windows 11/10 (odstranění bílého pruhu nahoře)
+        try:
+            import ctypes
+            hwnd = ctypes.windll.user32.GetParent(self.root.winfo_id())
+            DWMWA_USE_IMMERSIVE_DARK_MODE = 20
+            value = ctypes.c_int(1)
+            ctypes.windll.dwmapi.DwmSetWindowAttribute(
+                hwnd, DWMWA_USE_IMMERSIVE_DARK_MODE, ctypes.byref(value), ctypes.sizeof(value)
+            )
+        except:
+            pass  # Pokud selže (starší Windows), ignoruj
 
         # Vytvoření Fira Code fontu
         try:
@@ -332,14 +352,25 @@ class TranslatorApp:
         main_frame.rowconfigure(2, weight=1)
         main_frame.rowconfigure(4, weight=1)
 
-        # Header s aktuálními jazyky
+        # Header s aktuálními jazyky a překladačem
+        header_frame = ttk.Frame(main_frame)
+        header_frame.grid(row=0, column=0, sticky=(tk.W, tk.E), pady=(0, 10))
+
+        self.translator_label = ttk.Label(
+            header_frame,
+            text=self._get_translator_display(),
+            foreground=COLORS["accent_yellow"],
+            font=self.sans_font_bold
+        )
+        self.translator_label.pack(side=tk.LEFT, padx=(0, 15))
+
         self.lang_label = ttk.Label(
-            main_frame,
+            header_frame,
             text=self._get_language_display(),
             foreground=COLORS["accent_cyan"],
             font=self.sans_font_bold
         )
-        self.lang_label.grid(row=0, column=0, sticky=tk.W, pady=(0, 10))
+        self.lang_label.pack(side=tk.LEFT)
 
         # Input label a textové pole
         input_label = ttk.Label(main_frame, text="Text k překladu:")
@@ -362,6 +393,14 @@ class TranslatorApp:
             highlightbackground=COLORS["border"]
         )
         self.input_text.grid(row=2, column=0, sticky=(tk.W, tk.E, tk.N, tk.S), pady=(0, 10))
+        # Styling scrollbaru - dark theme
+        self.input_text.vbar.config(
+            bg=COLORS["bg_darker"],
+            troughcolor=COLORS["bg_dark"],
+            activebackground=COLORS["accent_cyan"],
+            relief=tk.FLAT,
+            width=12
+        )
         self.input_text.focus()
 
         # Output label a textové pole
@@ -385,6 +424,14 @@ class TranslatorApp:
             highlightbackground=COLORS["border"]
         )
         self.output_text.grid(row=4, column=0, sticky=(tk.W, tk.E, tk.N, tk.S), pady=(0, 10))
+        # Styling scrollbaru - dark theme
+        self.output_text.vbar.config(
+            bg=COLORS["bg_darker"],
+            troughcolor=COLORS["bg_dark"],
+            activebackground=COLORS["accent_purple"],
+            relief=tk.FLAT,
+            width=12
+        )
 
         # Status bar s počítadlem znaků
         status_frame = ttk.Frame(main_frame)
@@ -628,6 +675,8 @@ class TranslatorApp:
         """Callback po uložení nastavení - aktualizuje GUI"""
         # Re-kreovat překladač při změně služby
         self.translator = self._create_translator()
+        # Aktualizace zobrazení překladače
+        self.translator_label.config(text=self._get_translator_display())
         # Aktualizace zobrazení jazyků
         self.lang_label.config(text=self._get_language_display())
         # Aktualizace usage
