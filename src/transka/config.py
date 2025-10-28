@@ -19,6 +19,7 @@ class Config:
     DEFAULT_CONFIG = {
         "source_lang": "CS",
         "target_lang": "EN-US",
+        "translator_service": "deepl",  # "deepl" nebo "google"
         "hotkey_main": "win+p",  # Jediná zkratka: 1. stisk = otevře, 2. stisk = přeloží
         "window_width": 600,
         "window_height": 400,
@@ -116,3 +117,8 @@ class Config:
     def usage_warning_threshold(self) -> int:
         """Práh varování pro spotřebu znaků"""
         return self.config["usage_warning_threshold"]
+
+    @property
+    def translator_service(self) -> str:
+        """Vybraná překladová služba (deepl/google)"""
+        return self.config.get("translator_service", "deepl")  # Fallback pro staré konfigurace

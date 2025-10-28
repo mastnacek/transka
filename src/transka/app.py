@@ -14,7 +14,8 @@ import sys
 
 from transka.config import Config
 from transka.deepl_translator import DeepLTranslator
-from transka.base_translator import UsageInfo
+from transka.google_translator import GoogleTranslator
+from transka.base_translator import BaseTranslator, UsageInfo
 from transka.theme import COLORS, FONTS
 
 
@@ -48,13 +49,25 @@ class SettingsWindow:
         main_frame = ttk.Frame(self.window, padding="10")
         main_frame.grid(row=0, column=0, sticky=(tk.W, tk.E, tk.N, tk.S))
 
+        # Překladová služba
+        ttk.Label(main_frame, text="Překladač:").grid(row=0, column=0, sticky=tk.W, pady=5)
+        self.translator_service_var = tk.StringVar()
+        self.translator_service_combo = ttk.Combobox(
+            main_frame,
+            textvariable=self.translator_service_var,
+            values=["deepl", "google"],
+            state="readonly",
+            width=47
+        )
+        self.translator_service_combo.grid(row=0, column=1, pady=5, padx=5)
+
         # API klíč
-        ttk.Label(main_frame, text="DeepL API klíč:").grid(row=0, column=0, sticky=tk.W, pady=5)
+        ttk.Label(main_frame, text="DeepL API klíč:").grid(row=1, column=0, sticky=tk.W, pady=5)
         self.api_key_entry = ttk.Entry(main_frame, width=50, show="*")
-        self.api_key_entry.grid(row=0, column=1, pady=5, padx=5)
+        self.api_key_entry.grid(row=1, column=1, pady=5, padx=5)
 
         # Zdrojový jazyk
-        ttk.Label(main_frame, text="Zdrojový jazyk:").grid(row=1, column=0, sticky=tk.W, pady=5)
+        ttk.Label(main_frame, text="Zdrojový jazyk:").grid(row=2, column=0, sticky=tk.W, pady=5)
         self.source_lang_var = tk.StringVar()
         self.source_lang_combo = ttk.Combobox(
             main_frame,
@@ -63,10 +76,10 @@ class SettingsWindow:
             state="readonly",
             width=47
         )
-        self.source_lang_combo.grid(row=1, column=1, pady=5, padx=5)
+        self.source_lang_combo.grid(row=2, column=1, pady=5, padx=5)
 
         # Cílový jazyk
-        ttk.Label(main_frame, text="Cílový jazyk:").grid(row=2, column=0, sticky=tk.W, pady=5)
+        ttk.Label(main_frame, text="Cílový jazyk:").grid(row=3, column=0, sticky=tk.W, pady=5)
         self.target_lang_var = tk.StringVar()
         self.target_lang_combo = ttk.Combobox(
             main_frame,
@@ -75,29 +88,29 @@ class SettingsWindow:
             state="readonly",
             width=47
         )
-        self.target_lang_combo.grid(row=2, column=1, pady=5, padx=5)
+        self.target_lang_combo.grid(row=3, column=1, pady=5, padx=5)
 
         # Klávesová zkratka
-        ttk.Label(main_frame, text="Hlavní zkratka (Win+P):").grid(row=3, column=0, sticky=tk.W, pady=5)
+        ttk.Label(main_frame, text="Hlavní zkratka (Win+P):").grid(row=4, column=0, sticky=tk.W, pady=5)
         self.hotkey_main_entry = ttk.Entry(main_frame, width=50)
-        self.hotkey_main_entry.grid(row=3, column=1, pady=5, padx=5)
+        self.hotkey_main_entry.grid(row=4, column=1, pady=5, padx=5)
 
-        ttk.Label(main_frame, text="", font=("", 8)).grid(row=4, column=0, columnspan=2, sticky=tk.W, pady=0)
+        ttk.Label(main_frame, text="", font=("", 8)).grid(row=5, column=0, columnspan=2, sticky=tk.W, pady=0)
         ttk.Label(
             main_frame,
             text="Tip: První stisk otevře okno, druhý přeloží a zkopíruje",
             font=("", 8),
             foreground="gray"
-        ).grid(row=4, column=0, columnspan=2, sticky=tk.W, pady=0, padx=5)
+        ).grid(row=5, column=0, columnspan=2, sticky=tk.W, pady=0, padx=5)
 
         # Práh varování
-        ttk.Label(main_frame, text="Varování při (znacích):").grid(row=5, column=0, sticky=tk.W, pady=5)
+        ttk.Label(main_frame, text="Varování při (znacích):").grid(row=6, column=0, sticky=tk.W, pady=5)
         self.warning_threshold_entry = ttk.Entry(main_frame, width=50)
-        self.warning_threshold_entry.grid(row=5, column=1, pady=5, padx=5)
+        self.warning_threshold_entry.grid(row=6, column=1, pady=5, padx=5)
 
         # Tlačítka
         button_frame = ttk.Frame(main_frame)
-        button_frame.grid(row=6, column=0, columnspan=2, pady=20)
+        button_frame.grid(row=7, column=0, columnspan=2, pady=20)
 
         ttk.Button(button_frame, text="Uložit", command=self._save_settings).pack(side=tk.LEFT, padx=5)
         ttk.Button(button_frame, text="Test API", command=self._test_api).pack(side=tk.LEFT, padx=5)
@@ -105,6 +118,7 @@ class SettingsWindow:
 
     def _load_values(self):
         """Načte aktuální hodnoty do formuláře"""
+        self.translator_service_var.set(self.config.translator_service)
         self.api_key_entry.insert(0, self.config.api_key)
         self.source_lang_var.set(self.config.source_lang)
         self.target_lang_var.set(self.config.target_lang)
@@ -120,6 +134,7 @@ class SettingsWindow:
             self.translator.update_api_key(new_api_key)
 
         # Ostatní nastavení
+        self.config.set("translator_service", self.translator_service_var.get())
         self.config.set("source_lang", self.source_lang_var.get())
         self.config.set("target_lang", self.target_lang_var.get())
         self.config.set("hotkey_main", self.hotkey_main_entry.get().strip())
@@ -189,7 +204,7 @@ class TranslatorApp:
 
     def __init__(self):
         self.config = Config()
-        self.translator = DeepLTranslator(self.config.api_key)
+        self.translator = self._create_translator()
 
         self.root = tk.Tk()
         self.root.title("Transka")
@@ -218,6 +233,15 @@ class TranslatorApp:
 
         # Aktualizace usage při startu
         self._update_usage()
+
+    def _create_translator(self) -> BaseTranslator:
+        """Vytvoří instance překladače podle konfigurace"""
+        service = self.config.translator_service.lower()
+
+        if service == "google":
+            return GoogleTranslator()
+        else:  # default: deepl
+            return DeepLTranslator(self.config.api_key)
 
     def _get_language_display(self) -> str:
         """Vrátí formátovaný string s aktuálními jazyky"""
@@ -602,6 +626,8 @@ class TranslatorApp:
 
     def _on_settings_saved(self):
         """Callback po uložení nastavení - aktualizuje GUI"""
+        # Re-kreovat překladač při změně služby
+        self.translator = self._create_translator()
         # Aktualizace zobrazení jazyků
         self.lang_label.config(text=self._get_language_display())
         # Aktualizace usage

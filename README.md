@@ -1,9 +1,12 @@
 # Transka - Desktop Translator
 
-Moderní desktop aplikace pro rychlý překlad pomocí DeepL API s dark theme a intuitivními klávesovými zkratkami.
+Moderní desktop aplikace pro rychlý překlad s podporou **DeepL** a **Google Translate** API, dark theme a intuitivními klávesovými zkratkami.
 
 ## 🚀 Funkce
 
+- **Dva překladače na výběr**:
+  - **DeepL API** - Vysoká kvalita, vyžaduje API klíč (Free: 500k znaků/měsíc)
+  - **Google Translate** - Zdarma bez API klíče, neomezené použití
 - **System Tray**: Aplikace běží na pozadí v system tray
 - **Klávesové zkratky**:
   - **`Win+P`** - Hlavní zkratka (1. stisk = otevře, 2. stisk = přeloží)
@@ -11,16 +14,17 @@ Moderní desktop aplikace pro rychlý překlad pomocí DeepL API s dark theme a 
   - **`ESC`** - Zavře okno bez překladu
   - **`Ctrl+Enter`** - Přeloží text v okně
 - **Automatické vymazání**: Input pole se automaticky vymaže po úspěšném překladu
-- **Počítadlo znaků**: Sledování spotřeby DeepL API (Free: 500,000 znaků/měsíc)
-- **Varování při limitu**: Upozornění při dosažení 96% limitu
+- **Počítadlo znaků**: Sledování spotřeby API (DeepL zobrazuje usage, Google je neomezený)
+- **Varování při limitu**: Upozornění při dosažení 96% limitu (DeepL)
 - **Modern Dark Theme**: Cyberpunk design s Fira Code fontem
-- **Live reload**: Změny nastavení se aplikují okamžitě
-- **Konfigurovatelné**: Nastavení jazyků, API klíče a zkratek
+- **Live reload**: Změny nastavení (včetně překladače) se aplikují okamžitě
+- **Konfigurovatelné**: Nastavení jazyků, překladače, API klíče a zkratek
 
 ## 📋 Požadavky
 
 - Python 3.8+
-- DeepL API klíč (Free nebo Pro)
+- **DeepL API klíč** (Free nebo Pro) - **pouze pokud chcete používat DeepL**
+- **Google Translate** - funguje bez API klíče, zdarma
 - Windows (kvůli system tray a globálním zkratkám)
 
 ## 🔧 Instalace
@@ -116,11 +120,14 @@ Aplikace se spustí v system tray. Klikněte na ikonu pro otevření menu.
 
 ## ⚙️ Nastavení
 
-- **API klíč**: DeepL API klíč (Free nebo Pro)
+- **Překladač**: Výběr mezi `deepl` a `google`
+  - **DeepL**: Vyžaduje API klíč, vyšší kvalita, limit 500k znaků/měsíc
+  - **Google**: Zdarma, bez API klíče, neomezené použití
+- **API klíč**: DeepL API klíč (Free nebo Pro) - pouze pro DeepL
 - **Zdrojový jazyk**: Jazyk vstupního textu (AUTO pro automatickou detekci)
 - **Cílový jazyk**: Jazyk překladu
-- **Klávesová zkratka**: Přizpůsobení hlavní zkratky Win+P (vyžaduje restart)
-- **Práh varování**: Limit znaků pro varování (výchozí: 480,000)
+- **Klávesová zkratka**: Přizpůsobení hlavní zkratky Win+P (aplikuje se okamžitě)
+- **Práh varování**: Limit znaků pro varování - pouze pro DeepL (výchozí: 480,000)
 
 ## 🎮 Použití
 
@@ -159,7 +166,8 @@ Formát: `15,234 / 500,000 znaků (3.0%)`
 
 - **Python 3.8+**
 - **Tkinter**: GUI framework
-- **DeepL API**: Překladová služba
+- **DeepL API**: Překladová služba (volitelné)
+- **Google Translate API** (`googletrans`): Free překladač bez API klíče
 - **pystray**: System tray ikona
 - **keyboard**: Globální klávesové zkratky
 - **pyperclip**: Práce se schránkou
@@ -176,7 +184,8 @@ transka/
 │       ├── config.py         # Správa konfigurace
 │       ├── base_translator.py    # Abstraktní rozhraní pro překladače
 │       ├── deepl_translator.py   # DeepL API implementace
-│       ├── google_translator.py  # Google Translate (připraveno)
+│       ├── google_translator.py  # Google Translate implementace (googletrans)
+│       ├── theme.py          # Dark theme konfigurace (barvy, fonty)
 │       └── translator.py     # Legacy wrapper (deprecated)
 ├── install.bat               # Instalační script (Windows)
 ├── start.bat                 # Spouštěcí script (bez konzole)
@@ -195,23 +204,25 @@ transka/
 
 ## 🔮 Budoucí rozšíření a příprava
 
-### ✅ Připraveno (implementováno):
+### ✅ Implementováno:
 - **Python best practices struktura**: `src/transka/` package layout
 - **Console scripts**: `deepl-translator` příkaz po instalaci
 - **Module execution**: `python -m transka` podpora
 - **Architektura pro více překladačů**: BaseTranslator abstrakce
-- **Google Translate placeholder**: Připraveno pro budoucí implementaci
+- **Google Translate implementace**: Plně funkční pomocí `googletrans` knihovny
+- **Přepínání překladačů**: Výběr v nastavení mezi DeepL a Google
+- **Live reload**: Změna překladače se aplikuje okamžitě bez restartu
 - **UV package manager**: Moderní instalace a správa závislostí
 - **Spouštění bez konzole**: .bat script
+- **Dark theme**: Modern cyberpunk design s Fira Code fontem
 
 ### 📋 Plánováno:
 - [ ] **Automatické přepnutí na Google Translate** po dosažení 490k znaků DeepL limitu
-- [ ] **Google Translate implementace**: Dokončení google_translator.py
 - [ ] **Historie překladů**: Ukládání posledních N překladů
-- [ ] **Podpora více překladačů současně**: Výběr v nastavení
 - [ ] **Export/import nastavení**: Backup konfigurace
 - [ ] **Autostart s Windows**: Přidání do registry
 - [ ] **Systémový installer**: .exe pomocí PyInstaller/cx_Freeze
+- [ ] **Rozšíření jazyků**: Podpora všech jazyků z googletrans.LANGUAGES
 
 ## 📄 Licence
 

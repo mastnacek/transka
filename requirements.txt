@@ -16,5 +16,5 @@ pyperclip>=1.8.2
 # Konfigurace
 python-dotenv>=1.0.1
 
-# Optional: Google Translate API (pro budoucí použití)
-# googletrans>=4.0.0rc1
+# Google Translate API (free, bez API klíče)
+googletrans==4.0.0rc1
