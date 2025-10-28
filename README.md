@@ -131,22 +131,39 @@ Aplikace se spustí v system tray. Klikněte na ikonu pro otevření menu.
 
 ## 🎮 Použití
 
-### Základní workflow:
-1. Stiskněte **`Win+P`** (nebo **`Ctrl+P+P`**) pro otevření okna
-2. Vložte text k překladu (okno má automatický fokus)
-3. Stiskněte **`Win+P`** znovu (nebo **`Ctrl+Enter`**)
-4. Překlad se automaticky zkopíruje do schránky
-5. Input pole se **automaticky vymaže** (připraveno pro další překlad)
-6. Okno se automaticky skryje
-7. Vložte překlad kamkoli pomocí `Ctrl+V`
+### Hlavní workflow (3-step s Win+P nebo Ctrl+P+P):
 
-### Klávesové zkratky:
-- **`Win+P`**: Otevře okno / Přeloží text (toggle funkce)
-- **`Ctrl+P+P`**: Alternativa k Win+P (dvojité stisknutí < 0.5s)
-- **`ESC`**: Zavře okno bez překladu
-- **`Ctrl+Enter`**: Přeloží text (když je okno otevřené)
+**Nový workflow se třemi kroky:**
 
-**💡 Tip**: Input pole se automaticky vymaže po překladu, nemusíte mazat ručně!
+1. **První `Win+P` (nebo `Ctrl+P+P`)** → **Otevře okno**
+   - Okno se zobrazí s fokusem na input poli
+   - Vložte text k překladu
+
+2. **Druhý `Win+P` (nebo `Ctrl+P+P`)** → **Přeloží text**
+   - Text se přeloží a zobrazí v "Přeložený text" poli
+   - **Okno zůstane otevřené** - můžete si prohlédnout překlad
+
+3. **Třetí `Win+P` (nebo `Ctrl+P+P`)** → **Zkopíruje a zavře**
+   - Překlad se zkopíruje do schránky
+   - Input pole se vymaže
+   - Okno se zavře
+   - **Fokus se vrátí na předchozí program** (kde jste byli před otevřením)
+
+**Příklad použití:**
+```
+1. Ctrl+P+P → okno se otevře
+2. Napíšete: "Ahoj světe"
+3. Ctrl+P+P → zobrazí: "Hello world"
+4. Ctrl+P+P → zkopíruje "Hello world", zavře okno, vrátí fokus
+5. Ctrl+V → vložíte překlad kam potřebujete
+```
+
+### Alternativní zkratky:
+- **`ESC`**: Zavře okno kdykoli (resetuje workflow)
+- **`Ctrl+Enter`**: Rychlý překlad + kopírování + zavření (legacy - stará logika)
+- **Tlačítko "Přeložit"**: Stejné jako Ctrl+Enter
+
+**💡 Tip**: Nový workflow umožňuje zkontrolovat překlad před kopírováním!
 
 ### System Tray Menu:
 - **Zobrazit**: Otevře překladové okno

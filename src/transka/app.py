@@ -219,6 +219,9 @@ class TranslatorApp:
         # Proměnné
         self.is_visible = False
         self.previous_window = None
+        # State machine pro workflow:
+        # 0 = HIDDEN (skryté), 1 = SHOWN (viditelné), 2 = TRANSLATED (přeloženo)
+        self.window_state = 0
 
         # GUI komponenty
         self._create_widgets()
@@ -521,17 +524,37 @@ class TranslatorApp:
             print(f"Chyba při nastavování zkratek: {e}")
 
     def _handle_main_hotkey(self):
-        """Zpracuje hlavní klávesovou zkratku Win+P"""
-        if not self.is_visible:
-            # Okno není viditelné → zobraz ho
+        """
+        Zpracuje hlavní klávesovou zkratku Win+P (nebo Ctrl+P+P)
+
+        State machine workflow:
+        State 0 (HIDDEN) → zobraz okno → State 1 (SHOWN)
+        State 1 (SHOWN) → přelož text → State 2 (TRANSLATED)
+        State 2 (TRANSLATED) → zkopíruj, vymaž, zavři, restore fokus → State 0 (HIDDEN)
+        """
+        if self.window_state == 0:  # HIDDEN
+            # 1. Ctrl+P+P: Otevře okno
             self._show_window()
-        else:
-            # Okno je viditelné → přelož a zkopíruj
-            self._translate_and_copy()
+            self.window_state = 1
+        elif self.window_state == 1:  # SHOWN
+            # 2. Ctrl+P+P: Přeloží text a zobrazí v okně
+            self._translate_only()
+            self.window_state = 2
+        elif self.window_state == 2:  # TRANSLATED
+            # 3. Ctrl+P+P: Zkopíruje, vymaže, zavře, restore fokus
+            self._copy_and_close()
+            self.window_state = 0
 
     def _show_window(self):
         """Zobrazí překladové okno"""
         if not self.is_visible:
+            # Uložení předchozího okna pro restore fokus
+            try:
+                import ctypes
+                self.previous_window = ctypes.windll.user32.GetForegroundWindow()
+            except:
+                self.previous_window = None
+
             self.root.deiconify()
             self.root.lift()
             self.root.focus_force()
@@ -539,10 +562,11 @@ class TranslatorApp:
             self.is_visible = True
 
     def _hide_window(self):
-        """Skryje překladové okno"""
+        """Skryje překladové okno a resetuje state"""
         if self.is_visible:
             self.root.withdraw()
             self.is_visible = False
+            self.window_state = 0  # Reset do HIDDEN state
 
     def _translate(self):
         """Přeloží text"""
@@ -588,8 +612,69 @@ class TranslatorApp:
             # Aktualizace usage
             self._update_usage()
 
+    def _translate_only(self):
+        """
+        Přeloží text a zobrazí v output poli (NEUZAVŘE okno, NEKOPÍRUJE)
+        Použito ve State 1 → State 2
+        """
+        input_text = self.input_text.get("1.0", tk.END).strip()
+
+        if not input_text:
+            return
+
+        if not self.translator.is_configured():
+            messagebox.showerror("Chyba", "Překladač není nakonfigurován")
+            return
+
+        self.status_label.config(text="Překládám...", foreground=COLORS["status_working"])
+
+        def translate_thread():
+            result, error = self.translator.translate(
+                input_text,
+                self.config.source_lang,
+                self.config.target_lang
+            )
+            self.root.after(0, lambda: self._handle_translation_result(result, error))
+
+        threading.Thread(target=translate_thread, daemon=True).start()
+
+    def _copy_and_close(self):
+        """
+        Zkopíruje přeložený text do schránky, vymaže input, zavře okno a restore fokus
+        Použito ve State 2 → State 0
+        """
+        # Získání přeloženého textu z output pole
+        translated_text = self.output_text.get("1.0", tk.END).strip()
+
+        if translated_text:
+            # Kopírování do schránky
+            pyperclip.copy(translated_text)
+
+            # Vymazání input pole
+            self.input_text.delete("1.0", tk.END)
+
+            # Vymazání output pole
+            self.output_text.config(state=tk.NORMAL)
+            self.output_text.delete("1.0", tk.END)
+            self.output_text.config(state=tk.DISABLED)
+
+            # Skrytí okna (resetuje window_state na 0)
+            self._hide_window()
+
+            # Restore fokus na předchozí okno
+            if self.previous_window:
+                try:
+                    import ctypes
+                    ctypes.windll.user32.SetForegroundWindow(self.previous_window)
+                except:
+                    pass
+
     def _translate_and_copy(self):
-        """Přeloží text a zkopíruje do schránky"""
+        """
+        LEGACY: Přeloží text a zkopíruje do schránky (stará logika)
+        Používá se pro tlačítko "Přeložit" a Ctrl+Enter
+        Také resetuje window_state pro konzistenci
+        """
         input_text = self.input_text.get("1.0", tk.END).strip()
 
         if not input_text:
@@ -615,7 +700,7 @@ class TranslatorApp:
             # Vymazání input pole po úspěšném překladu
             self.root.after(50, self._clear_input_only)
 
-            # Skrytí okna
+            # Skrytí okna (automaticky resetuje window_state na 0)
             self.root.after(100, self._hide_window)
 
     def _clear_input_only(self):
