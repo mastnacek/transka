@@ -14,20 +14,31 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - `GoogleTranslator` (google_translator.py) - Google Translate implementace
 - **Přepínání** mezi překladači za běhu bez restartu (live reload)
 
-#### 2. **GUI workflow** (3-step process)
-Hlavní logika v `app.py`:
+#### 2. **GUI moduly**
+- `app.py` - hlavní aplikace `TranslatorApp` (663 řádků)
+  - 3-step workflow: otevři → přelož → zkopíruj+zavři
+  - System tray integrace
+  - Dark theme aplikace
+  - Globální hotkeys registrace
+- `settings_window.py` - samostatný modul pro nastavení (192 řádků)
+  - `SettingsWindow` třída
+  - Live reload podpory (změny se aplikují okamžitě)
+  - Test API funkce
+
+#### 3. **GUI workflow** (3-step process)
+Hlavní logika v `app.py::TranslatorApp`:
 ```
 1. První Win+P / Ctrl+P+P → Otevře okno
 2. Druhý Win+P / Ctrl+P+P → Přeloží text (okno zůstane otevřené)
 3. Třetí Win+P / Ctrl+P+P → Zkopíruje překlad + zavře okno + vrátí fokus
 ```
 
-#### 3. **Konfigurace** (config.py)
+#### 4. **Konfigurace** (config.py)
 - `config.json` - uživatelská nastavení (jazyk, překladač, zkratky, GUI rozměry)
 - `.env` - DeepL API klíč (pouze pro DeepL, Google nepotřebuje)
 - `Config` třída: singleton-like správce nastavení s `load()` / `save()`
 
-#### 4. **System tray** (pystray)
+#### 5. **System tray** (pystray)
 - `create_image()` - generování ikony programově (Image + ImageDraw)
 - Menu: Zobrazit / Nastavení / Ukončit
 - Globální zkratky: `keyboard` knihovna pro Win+P registraci
