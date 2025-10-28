@@ -15,15 +15,20 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - **Přepínání** mezi překladači za běhu bez restartu (live reload)
 
 #### 2. **GUI moduly**
-- `app.py` - hlavní aplikace `TranslatorApp` (663 řádků)
+- `app.py` - hlavní aplikace `TranslatorApp` (579 řádků)
   - 3-step workflow: otevři → přelož → zkopíruj+zavři
   - System tray integrace
-  - Dark theme aplikace
   - Globální hotkeys registrace
+  - Použití ThemeManager pro styling
 - `settings_window.py` - samostatný modul pro nastavení (192 řádků)
   - `SettingsWindow` třída
   - Live reload podpory (změny se aplikují okamžitě)
   - Test API funkce
+- `theme_manager.py` - správa dark theme (147 řádků)
+  - `ThemeManager` třída
+  - Aplikace dark titlebar (Windows 11/10)
+  - Font management (Fira Code, Consolas fallback)
+  - TTK styles konfigurace pro dark mode
 
 #### 3. **GUI workflow** (3-step process)
 Hlavní logika v `app.py::TranslatorApp`:
@@ -62,7 +67,11 @@ app.py::main()
 
 ### Dark theme
 
-- `theme.py` - `COLORS` dict + `FONTS` dict
+- `theme.py` - konstanty (`COLORS` dict + `FONTS` dict)
+- `theme_manager.py` - aplikační logika (`ThemeManager` třída)
+  - Centralizovaná správa theme pro všechna okna
+  - Dark titlebar pro Windows (ctypes DwmSetWindowAttribute)
+  - Font management s fallback systémem
 - Cyberpunk styl: tmavé pozadí (#1a1a2e), neonové akcenty (#00d9ff, #ff006e)
 - Font: Fira Code (fallback na Consolas/Courier)
 

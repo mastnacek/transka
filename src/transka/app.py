@@ -3,7 +3,7 @@
 Transka - Desktop aplikace pro rychlý překlad
 """
 import tkinter as tk
-from tkinter import ttk, messagebox, scrolledtext, font as tkfont
+from tkinter import ttk, messagebox, scrolledtext
 import threading
 import pyperclip
 import keyboard
@@ -18,6 +18,7 @@ from transka.deepl_translator import DeepLTranslator
 from transka.google_translator import GoogleTranslator
 from transka.base_translator import BaseTranslator, UsageInfo
 from transka.settings_window import SettingsWindow
+from transka.theme_manager import ThemeManager
 from transka.theme import COLORS, FONTS
 
 
@@ -43,7 +44,15 @@ class TranslatorApp:
             print(f"Nelze načíst ikonu: {e}")
 
         # Modern Dark Theme
-        self._apply_theme()
+        self.theme_manager = ThemeManager(self.root)
+        self.theme_manager.apply_theme()
+
+        # Získání fontů z theme manageru
+        fonts = self.theme_manager.get_fonts()
+        self.mono_font = fonts["mono_font"]
+        self.mono_font_large = fonts["mono_font_large"]
+        self.sans_font = fonts["sans_font"]
+        self.sans_font_bold = fonts["sans_font_bold"]
 
         # Skrytí okna při startu
         self.root.withdraw()
@@ -91,99 +100,6 @@ class TranslatorApp:
         source = self.config.source_lang
         target = self.config.target_lang
         return f"🌐 {source} → {target}"
-
-    def _apply_theme(self):
-        """Aplikuje modern dark theme s glow efekty"""
-        # Pozadí hlavního okna
-        self.root.configure(bg=COLORS["bg_dark"])
-
-        # Dark titlebar pro Windows 11/10 (odstranění bílého pruhu nahoře)
-        try:
-            # Musíme počkat, než se okno vytvoří
-            self.root.update_idletasks()
-
-            import ctypes
-            # Získání HWND handle přímo z winfo_id()
-            hwnd = self.root.winfo_id()
-
-            # DWMWA_USE_IMMERSIVE_DARK_MODE = 20 (Windows 11)
-            # DWMWA_USE_IMMERSIVE_DARK_MODE = 19 (Windows 10 build 19041+)
-            DWMWA_USE_IMMERSIVE_DARK_MODE = 20
-            value = ctypes.c_int(2)  # 2 = force dark mode, 1 = enable
-
-            ctypes.windll.dwmapi.DwmSetWindowAttribute(
-                hwnd,
-                DWMWA_USE_IMMERSIVE_DARK_MODE,
-                ctypes.byref(value),
-                ctypes.sizeof(value)
-            )
-        except Exception as e:
-            print(f"Dark titlebar nepodporován: {e}")  # Debug info
-
-        # Vytvoření Fira Code fontu
-        try:
-            self.mono_font = tkfont.Font(family="Fira Code", size=FONTS["size_normal"])
-            self.mono_font_large = tkfont.Font(family="Fira Code", size=FONTS["size_large"])
-        except:
-            # Fallback na Consolas pokud Fira Code není k dispozici
-            self.mono_font = tkfont.Font(family="Consolas", size=FONTS["size_normal"])
-            self.mono_font_large = tkfont.Font(family="Consolas", size=FONTS["size_large"])
-
-        self.sans_font = tkfont.Font(family="Segoe UI", size=FONTS["size_normal"])
-        self.sans_font_bold = tkfont.Font(family="Segoe UI", size=FONTS["size_normal"], weight="bold")
-
-        # TTK Style pro dark theme
-        style = ttk.Style()
-        style.theme_use('clam')  # Používáme 'clam' theme jako základ
-
-        # Frame style
-        style.configure('TFrame', background=COLORS["bg_dark"])
-
-        # Label style
-        style.configure('TLabel',
-            background=COLORS["bg_dark"],
-            foreground=COLORS["text_primary"],
-            font=self.sans_font
-        )
-
-        # Button style s glow efektem
-        style.configure('TButton',
-            background=COLORS["bg_button"],
-            foreground=COLORS["accent_cyan"],
-            bordercolor=COLORS["border"],
-            focuscolor=COLORS["border_focus"],
-            font=self.sans_font_bold,
-            relief=tk.FLAT
-        )
-        style.map('TButton',
-            background=[('active', COLORS["bg_button_hover"]), ('pressed', COLORS["bg_darker"])],
-            foreground=[('active', COLORS["accent_cyan"]), ('pressed', COLORS["accent_purple"])]
-        )
-
-        # Entry style
-        style.configure('TEntry',
-            fieldbackground=COLORS["bg_input"],
-            background=COLORS["bg_input"],
-            foreground=COLORS["text_primary"],
-            insertcolor=COLORS["accent_cyan"],
-            bordercolor=COLORS["border"],
-            lightcolor=COLORS["border_focus"],
-            darkcolor=COLORS["border"]
-        )
-
-        # Combobox style
-        style.configure('TCombobox',
-            fieldbackground=COLORS["bg_input"],
-            background=COLORS["bg_button"],
-            foreground=COLORS["text_primary"],
-            arrowcolor=COLORS["accent_cyan"],
-            bordercolor=COLORS["border"]
-        )
-        style.map('TCombobox',
-            fieldbackground=[('readonly', COLORS["bg_input"])],
-            selectbackground=[('readonly', COLORS["accent_cyan"])],
-            selectforeground=[('readonly', COLORS["bg_dark"])]
-        )
 
     def _create_widgets(self):
         """Vytvoří GUI komponenty"""
