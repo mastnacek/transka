@@ -21,12 +21,13 @@ from transka.theme import COLORS, FONTS
 class SettingsWindow:
     """Okno s nastavením aplikace"""
 
-    def __init__(self, parent, config: Config, translator: DeepLTranslator, on_save_callback):
+    def __init__(self, parent, parent_app, config: Config, translator: DeepLTranslator, on_save_callback):
         self.window = tk.Toplevel(parent)
         self.window.title("Nastavení")
         self.window.geometry("500x450")
         self.window.resizable(False, False)
 
+        self.parent = parent_app  # Reference na TranslatorApp pro live reload
         self.config = config
         self.translator = translator
         self.on_save_callback = on_save_callback
@@ -127,7 +128,23 @@ class SettingsWindow:
             messagebox.showerror("Chyba", "Neplatná hodnota pro práh varování")
             return
 
-        messagebox.showinfo("Úspěch", "Nastavení uloženo. Restartujte aplikaci pro aplikování zkratek.")
+        # Okamžitá aplikace změn bez restartu
+        old_hotkey = self.config.hotkey_main
+        new_hotkey = self.hotkey_main_entry.get().strip()
+
+        # Pokud se změnila zkratka, re-registruj ji
+        if old_hotkey != new_hotkey:
+            try:
+                keyboard.remove_hotkey(old_hotkey)
+            except:
+                pass
+            try:
+                keyboard.add_hotkey(new_hotkey, self.parent._handle_main_hotkey)
+            except Exception as e:
+                messagebox.showerror("Chyba", f"Nelze nastavit zkratku {new_hotkey}: {e}")
+                return
+
+        messagebox.showinfo("Úspěch", "Nastavení aplikováno okamžitě!")
         self.on_save_callback()
         self.window.destroy()
 
@@ -199,6 +216,12 @@ class TranslatorApp:
         # Aktualizace usage při startu
         self._update_usage()
 
+    def _get_language_display(self) -> str:
+        """Vrátí formátovaný string s aktuálními jazyky"""
+        source = self.config.source_lang
+        target = self.config.target_lang
+        return f"🌐 {source} → {target}"
+
     def _apply_theme(self):
         """Aplikuje modern dark theme s glow efekty"""
         # Pozadí hlavního okna
@@ -252,12 +275,21 @@ class TranslatorApp:
         self.root.columnconfigure(0, weight=1)
         self.root.rowconfigure(0, weight=1)
         main_frame.columnconfigure(0, weight=1)
-        main_frame.rowconfigure(1, weight=1)
-        main_frame.rowconfigure(3, weight=1)
+        main_frame.rowconfigure(2, weight=1)
+        main_frame.rowconfigure(4, weight=1)
+
+        # Header s aktuálními jazyky
+        self.lang_label = ttk.Label(
+            main_frame,
+            text=self._get_language_display(),
+            foreground=COLORS["accent_cyan"],
+            font=self.sans_font_bold
+        )
+        self.lang_label.grid(row=0, column=0, sticky=tk.W, pady=(0, 10))
 
         # Input label a textové pole
         input_label = ttk.Label(main_frame, text="Text k překladu:")
-        input_label.grid(row=0, column=0, sticky=tk.W, pady=(0, 5))
+        input_label.grid(row=1, column=0, sticky=tk.W, pady=(0, 5))
 
         self.input_text = scrolledtext.ScrolledText(
             main_frame,
@@ -275,12 +307,12 @@ class TranslatorApp:
             highlightcolor=COLORS["border_focus"],
             highlightbackground=COLORS["border"]
         )
-        self.input_text.grid(row=1, column=0, sticky=(tk.W, tk.E, tk.N, tk.S), pady=(0, 10))
+        self.input_text.grid(row=2, column=0, sticky=(tk.W, tk.E, tk.N, tk.S), pady=(0, 10))
         self.input_text.focus()
 
         # Output label a textové pole
         output_label = ttk.Label(main_frame, text="Přeložený text:")
-        output_label.grid(row=2, column=0, sticky=tk.W, pady=(0, 5))
+        output_label.grid(row=3, column=0, sticky=tk.W, pady=(0, 5))
 
         self.output_text = scrolledtext.ScrolledText(
             main_frame,
@@ -298,11 +330,11 @@ class TranslatorApp:
             highlightcolor=COLORS["accent_purple"],
             highlightbackground=COLORS["border"]
         )
-        self.output_text.grid(row=3, column=0, sticky=(tk.W, tk.E, tk.N, tk.S), pady=(0, 10))
+        self.output_text.grid(row=4, column=0, sticky=(tk.W, tk.E, tk.N, tk.S), pady=(0, 10))
 
         # Status bar s počítadlem znaků
         status_frame = ttk.Frame(main_frame)
-        status_frame.grid(row=4, column=0, sticky=(tk.W, tk.E), pady=(5, 0))
+        status_frame.grid(row=5, column=0, sticky=(tk.W, tk.E), pady=(5, 0))
 
         self.status_label = ttk.Label(status_frame, text="Připraveno", foreground=COLORS["text_primary"])
         self.status_label.pack(side=tk.LEFT)
@@ -312,7 +344,7 @@ class TranslatorApp:
 
         # Tlačítka
         button_frame = ttk.Frame(main_frame)
-        button_frame.grid(row=5, column=0, pady=(10, 0))
+        button_frame.grid(row=6, column=0, pady=(10, 0))
 
         ttk.Button(
             button_frame,
@@ -510,9 +542,16 @@ class TranslatorApp:
         if self.translator.is_configured():
             threading.Thread(target=update_thread, daemon=True).start()
 
+    def _on_settings_saved(self):
+        """Callback po uložení nastavení - aktualizuje GUI"""
+        # Aktualizace zobrazení jazyků
+        self.lang_label.config(text=self._get_language_display())
+        # Aktualizace usage
+        self._update_usage()
+
     def _show_settings(self):
         """Zobrazí okno s nastavením"""
-        SettingsWindow(self.root, self.config, self.translator, self._update_usage)
+        SettingsWindow(self.root, self, self.config, self.translator, self._on_settings_saved)
 
     def _quit_app(self):
         """Ukončí aplikaci"""
