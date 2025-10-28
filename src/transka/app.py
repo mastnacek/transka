@@ -278,15 +278,26 @@ class TranslatorApp:
 
         # Dark titlebar pro Windows 11/10 (odstranění bílého pruhu nahoře)
         try:
+            # Musíme počkat, než se okno vytvoří
+            self.root.update_idletasks()
+
             import ctypes
-            hwnd = ctypes.windll.user32.GetParent(self.root.winfo_id())
+            # Získání HWND handle přímo z winfo_id()
+            hwnd = self.root.winfo_id()
+
+            # DWMWA_USE_IMMERSIVE_DARK_MODE = 20 (Windows 11)
+            # DWMWA_USE_IMMERSIVE_DARK_MODE = 19 (Windows 10 build 19041+)
             DWMWA_USE_IMMERSIVE_DARK_MODE = 20
-            value = ctypes.c_int(1)
+            value = ctypes.c_int(2)  # 2 = force dark mode, 1 = enable
+
             ctypes.windll.dwmapi.DwmSetWindowAttribute(
-                hwnd, DWMWA_USE_IMMERSIVE_DARK_MODE, ctypes.byref(value), ctypes.sizeof(value)
+                hwnd,
+                DWMWA_USE_IMMERSIVE_DARK_MODE,
+                ctypes.byref(value),
+                ctypes.sizeof(value)
             )
-        except:
-            pass  # Pokud selže (starší Windows), ignoruj
+        except Exception as e:
+            print(f"Dark titlebar nepodporován: {e}")  # Debug info
 
         # Vytvoření Fira Code fontu
         try:
@@ -367,21 +378,25 @@ class TranslatorApp:
         main_frame.rowconfigure(4, weight=1)
 
         # Header s aktuálními jazyky a překladačem
-        header_frame = ttk.Frame(main_frame)
+        # Použití tk.Frame místo ttk.Frame pro správné dark pozadí
+        header_frame = tk.Frame(main_frame, bg=COLORS["bg_dark"])
         header_frame.grid(row=0, column=0, sticky=(tk.W, tk.E), pady=(0, 10))
 
-        self.translator_label = ttk.Label(
+        # Použití tk.Label místo ttk.Label pro přesné barvy
+        self.translator_label = tk.Label(
             header_frame,
             text=self._get_translator_display(),
-            foreground=COLORS["accent_yellow"],
+            fg=COLORS["accent_yellow"],
+            bg=COLORS["bg_dark"],
             font=self.sans_font_bold
         )
         self.translator_label.pack(side=tk.LEFT, padx=(0, 15))
 
-        self.lang_label = ttk.Label(
+        self.lang_label = tk.Label(
             header_frame,
             text=self._get_language_display(),
-            foreground=COLORS["accent_cyan"],
+            fg=COLORS["accent_cyan"],
+            bg=COLORS["bg_dark"],
             font=self.sans_font_bold
         )
         self.lang_label.pack(side=tk.LEFT)
