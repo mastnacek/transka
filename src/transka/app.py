@@ -496,23 +496,7 @@ class TranslatorApp:
         # Ctrl+Return pro překlad v rámci okna
         self.root.bind("<Control-Return>", lambda e: self._translate())
 
-        # Ctrl+P+P (dvojité stisknutí) jako alternativa k Win+P
-        self._last_ctrl_p_time = 0
-        self.root.bind("<Control-p>", self._handle_ctrl_p_double)
-
-    def _handle_ctrl_p_double(self, event):
-        """Zpracuje Ctrl+P+P (dvojité stisknutí rychle za sebou)"""
-        import time
-        current_time = time.time()
-
-        # Pokud mezi stisky je méně než 0.5s, považuj za dvojité stisknutí
-        if current_time - self._last_ctrl_p_time < 0.5:
-            # Dvojité stisknutí! Stejná funkce jako Win+P
-            self._handle_main_hotkey()
-            self._last_ctrl_p_time = 0  # Reset
-        else:
-            # První stisknutí, zapamatuj čas
-            self._last_ctrl_p_time = current_time
+        # Poznámka: Ctrl+P+P je nyní globální hotkey v _setup_hotkeys()
 
     def _setup_tray(self):
         """Nastaví system tray ikonu"""
@@ -541,10 +525,26 @@ class TranslatorApp:
     def _setup_hotkeys(self):
         """Nastaví globální klávesové zkratky"""
         try:
-            # Jediná zkratka Win+P pro vše:
-            # - Pokud okno není viditelné → zobrazí se
-            # - Pokud okno je viditelné → přeloží a zkopíruje do schránky
+            # Hlavní zkratka Win+P
             keyboard.add_hotkey(self.config.hotkey_main, self._handle_main_hotkey)
+
+            # Ctrl+P+P jako alternativní zkratka (globální)
+            # Používáme tracking času pro detekci dvojitého stisku
+            import time
+            self._last_ctrl_p_time_global = 0
+
+            def ctrl_p_handler():
+                """Globální handler pro Ctrl+P"""
+                current_time = time.time()
+                if current_time - self._last_ctrl_p_time_global < 0.5:
+                    # Dvojité stisknutí < 0.5s
+                    self._handle_main_hotkey()
+                    self._last_ctrl_p_time_global = 0
+                else:
+                    # První stisknutí
+                    self._last_ctrl_p_time_global = current_time
+
+            keyboard.add_hotkey('ctrl+p', ctrl_p_handler)
 
         except Exception as e:
             print(f"Chyba při nastavování zkratek: {e}")
