@@ -19,8 +19,7 @@ class Config:
     DEFAULT_CONFIG = {
         "source_lang": "CS",
         "target_lang": "EN-US",
-        "hotkey_show": "win+space",
-        "hotkey_translate": "win+p",
+        "hotkey_main": "win+p",  # Jediná zkratka: 1. stisk = otevře, 2. stisk = přeloží
         "window_width": 600,
         "window_height": 400,
         "usage_warning_threshold": 480000  # Varování při 96% limitu (480k z 500k)
@@ -99,14 +98,9 @@ class Config:
         return self.config["target_lang"]
 
     @property
-    def hotkey_show(self) -> str:
-        """Klávesová zkratka pro zobrazení okna"""
-        return self.config["hotkey_show"]
-
-    @property
-    def hotkey_translate(self) -> str:
-        """Klávesová zkratka pro překlad"""
-        return self.config["hotkey_translate"]
+    def hotkey_main(self) -> str:
+        """Hlavní klávesová zkratka (Win+P) - otevře okno / přeloží"""
+        return self.config.get("hotkey_main", "win+p")  # Fallback pro staré konfigurace
 
     @property
     def window_width(self) -> int:

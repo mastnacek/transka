@@ -72,14 +72,18 @@ class SettingsWindow:
         )
         self.target_lang_combo.grid(row=2, column=1, pady=5, padx=5)
 
-        # Klávesové zkratky
-        ttk.Label(main_frame, text="Zkratka pro otevření:").grid(row=3, column=0, sticky=tk.W, pady=5)
-        self.hotkey_show_entry = ttk.Entry(main_frame, width=50)
-        self.hotkey_show_entry.grid(row=3, column=1, pady=5, padx=5)
+        # Klávesová zkratka
+        ttk.Label(main_frame, text="Hlavní zkratka (Win+P):").grid(row=3, column=0, sticky=tk.W, pady=5)
+        self.hotkey_main_entry = ttk.Entry(main_frame, width=50)
+        self.hotkey_main_entry.grid(row=3, column=1, pady=5, padx=5)
 
-        ttk.Label(main_frame, text="Zkratka pro překlad:").grid(row=4, column=0, sticky=tk.W, pady=5)
-        self.hotkey_translate_entry = ttk.Entry(main_frame, width=50)
-        self.hotkey_translate_entry.grid(row=4, column=1, pady=5, padx=5)
+        ttk.Label(main_frame, text="", font=("", 8)).grid(row=4, column=0, columnspan=2, sticky=tk.W, pady=0)
+        ttk.Label(
+            main_frame,
+            text="Tip: První stisk otevře okno, druhý přeloží a zkopíruje",
+            font=("", 8),
+            foreground="gray"
+        ).grid(row=4, column=0, columnspan=2, sticky=tk.W, pady=0, padx=5)
 
         # Práh varování
         ttk.Label(main_frame, text="Varování při (znacích):").grid(row=5, column=0, sticky=tk.W, pady=5)
@@ -99,8 +103,7 @@ class SettingsWindow:
         self.api_key_entry.insert(0, self.config.api_key)
         self.source_lang_var.set(self.config.source_lang)
         self.target_lang_var.set(self.config.target_lang)
-        self.hotkey_show_entry.insert(0, self.config.hotkey_show)
-        self.hotkey_translate_entry.insert(0, self.config.hotkey_translate)
+        self.hotkey_main_entry.insert(0, self.config.hotkey_main)
         self.warning_threshold_entry.insert(0, str(self.config.usage_warning_threshold))
 
     def _save_settings(self):
@@ -114,8 +117,7 @@ class SettingsWindow:
         # Ostatní nastavení
         self.config.set("source_lang", self.source_lang_var.get())
         self.config.set("target_lang", self.target_lang_var.get())
-        self.config.set("hotkey_show", self.hotkey_show_entry.get().strip())
-        self.config.set("hotkey_translate", self.hotkey_translate_entry.get().strip())
+        self.config.set("hotkey_main", self.hotkey_main_entry.get().strip())
 
         try:
             threshold = int(self.warning_threshold_entry.get().strip())
@@ -233,7 +235,7 @@ class TranslatorApp:
 
         ttk.Button(
             button_frame,
-            text=f"Přeložit ({self.config.hotkey_translate})",
+            text=f"Přeložit ({self.config.hotkey_main})",
             command=self._translate
         ).pack(side=tk.LEFT, padx=5)
 
@@ -275,14 +277,22 @@ class TranslatorApp:
     def _setup_hotkeys(self):
         """Nastaví globální klávesové zkratky"""
         try:
-            # Zkratka pro zobrazení okna
-            keyboard.add_hotkey(self.config.hotkey_show, self._show_window)
-
-            # Zkratka pro překlad
-            keyboard.add_hotkey(self.config.hotkey_translate, self._translate_and_copy)
+            # Jediná zkratka Win+P pro vše:
+            # - Pokud okno není viditelné → zobrazí se
+            # - Pokud okno je viditelné → přeloží a zkopíruje do schránky
+            keyboard.add_hotkey(self.config.hotkey_main, self._handle_main_hotkey)
 
         except Exception as e:
             print(f"Chyba při nastavování zkratek: {e}")
+
+    def _handle_main_hotkey(self):
+        """Zpracuje hlavní klávesovou zkratku Win+P"""
+        if not self.is_visible:
+            # Okno není viditelné → zobraz ho
+            self._show_window()
+        else:
+            # Okno je viditelné → přelož a zkopíruj
+            self._translate_and_copy()
 
     def _show_window(self):
         """Zobrazí překladové okno"""

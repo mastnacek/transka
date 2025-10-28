@@ -5,9 +5,9 @@ Jednoduchá desktop aplikace pro rychlý překlad pomocí DeepL API s podporou s
 ## 🚀 Funkce
 
 - **System Tray**: Aplikace běží na pozadí v system tray
-- **Globální klávesové zkratky**:
-  - `Win + Mezerník`: Otevře překladové okno
-  - `Win + P`: Přeloží text a zkopíruje do schránky
+- **Jediná klávesová zkratka `Win+P`**:
+  - **První stisk**: Otevře překladové okno s fokusem na input
+  - **Druhý stisk**: Přeloží text a zkopíruje do schránky + skryje okno
 - **Počítadlo znaků**: Sledování spotřeby DeepL API (Free: 500,000 znaků/měsíc)
 - **Varování při limitu**: Upozornění při dosažení 96% limitu
 - **Jednoduché GUI**: Minimalistické rozhraní s Tkinter
@@ -115,18 +115,20 @@ Aplikace se spustí v system tray. Klikněte na ikonu pro otevření menu.
 - **API klíč**: DeepL API klíč (Free nebo Pro)
 - **Zdrojový jazyk**: Jazyk vstupního textu (AUTO pro automatickou detekci)
 - **Cílový jazyk**: Jazyk překladu
-- **Klávesové zkratky**: Přizpůsobení zkratek (vyžaduje restart)
+- **Klávesová zkratka**: Přizpůsobení hlavní zkratky Win+P (vyžaduje restart)
 - **Práh varování**: Limit znaků pro varování (výchozí: 480,000)
 
 ## 🎮 Použití
 
 ### Základní workflow:
-1. Stiskněte `Win + Mezerník` pro otevření okna
-2. Vložte text k překladu
-3. Stiskněte `Win + P` nebo klikněte na "Přeložit"
-4. Překlad se zkopíruje do schránky
+1. Stiskněte `Win + P` pro otevření okna
+2. Vložte text k překladu (okno má automatický fokus)
+3. Stiskněte `Win + P` znovu (nebo klikněte na "Přeložit")
+4. Překlad se automaticky zkopíruje do schránky
 5. Okno se automaticky skryje
 6. Vložte překlad kamkoli pomocí `Ctrl + V`
+
+**💡 Tip**: Stačí pamatovat jen `Win + P` - první stisk otevře, druhý přeloží!
 
 ### System Tray Menu:
 - **Zobrazit**: Otevře překladové okno
