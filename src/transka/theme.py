@@ -13,7 +13,7 @@ COLORS = {
     "bg_button_hover": "#353535",   # Tlačítko hover
 
     # Text
-    "text_primary": "#dadada",      # Hlavní text
+    "text_primary": "#f0f0f0",      # Hlavní text (světlejší)
     "text_secondary": "#999999",    # Sekundární text
     "text_muted": "#666666",        # Ztlumený text
 
@@ -40,9 +40,9 @@ COLORS = {
 FONTS = {
     "mono": ("Fira Code", "Consolas", "Monaco", "Courier New", "monospace"),
     "sans": ("Segoe UI", "Arial", "sans-serif"),
-    "size_normal": 10,
-    "size_large": 12,
-    "size_small": 8,
+    "size_normal": 11,      # Zvětšeno z 10 na 11
+    "size_large": 14,       # Zvětšeno z 12 na 14 pro hlavní text
+    "size_small": 9,        # Zvětšeno z 8 na 9
 }
 
 def get_ttk_theme_config():

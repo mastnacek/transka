@@ -233,9 +233,11 @@ class TranslatorApp:
         # Vytvoření Fira Code fontu
         try:
             self.mono_font = tkfont.Font(family="Fira Code", size=FONTS["size_normal"])
+            self.mono_font_large = tkfont.Font(family="Fira Code", size=FONTS["size_large"])
         except:
             # Fallback na Consolas pokud Fira Code není k dispozici
             self.mono_font = tkfont.Font(family="Consolas", size=FONTS["size_normal"])
+            self.mono_font_large = tkfont.Font(family="Consolas", size=FONTS["size_large"])
 
         self.sans_font = tkfont.Font(family="Segoe UI", size=FONTS["size_normal"])
         self.sans_font_bold = tkfont.Font(family="Segoe UI", size=FONTS["size_normal"], weight="bold")
@@ -323,7 +325,7 @@ class TranslatorApp:
             main_frame,
             height=8,
             wrap=tk.WORD,
-            font=self.mono_font,
+            font=self.mono_font_large,
             bg=COLORS["bg_input"],
             fg=COLORS["text_primary"],
             insertbackground=COLORS["accent_cyan"],  # Kurzor
@@ -347,7 +349,7 @@ class TranslatorApp:
             height=8,
             wrap=tk.WORD,
             state=tk.DISABLED,
-            font=self.mono_font,
+            font=self.mono_font_large,
             bg=COLORS["bg_darker"],
             fg=COLORS["text_primary"],
             selectbackground=COLORS["accent_purple"],
