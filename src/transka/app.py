@@ -388,8 +388,29 @@ class TranslatorApp:
         """Nastaví události okna"""
         self.root.protocol("WM_DELETE_WINDOW", self._hide_window)
 
-        # Bind pro Win+P v rámci okna
+        # ESC pro zavření okna
+        self.root.bind("<Escape>", lambda e: self._hide_window())
+
+        # Ctrl+Return pro překlad v rámci okna
         self.root.bind("<Control-Return>", lambda e: self._translate())
+
+        # Ctrl+P+P (dvojité stisknutí) jako alternativa k Win+P
+        self._last_ctrl_p_time = 0
+        self.root.bind("<Control-p>", self._handle_ctrl_p_double)
+
+    def _handle_ctrl_p_double(self, event):
+        """Zpracuje Ctrl+P+P (dvojité stisknutí rychle za sebou)"""
+        import time
+        current_time = time.time()
+
+        # Pokud mezi stisky je méně než 0.5s, považuj za dvojité stisknutí
+        if current_time - self._last_ctrl_p_time < 0.5:
+            # Dvojité stisknutí! Stejná funkce jako Win+P
+            self._handle_main_hotkey()
+            self._last_ctrl_p_time = 0  # Reset
+        else:
+            # První stisknutí, zapamatuj čas
+            self._last_ctrl_p_time = current_time
 
     def _setup_tray(self):
         """Nastaví system tray ikonu"""
@@ -518,8 +539,15 @@ class TranslatorApp:
             # Aktualizace GUI
             self.root.after(0, lambda: self._handle_translation_result(result, error))
 
+            # Vymazání input pole po úspěšném překladu
+            self.root.after(50, self._clear_input_only)
+
             # Skrytí okna
             self.root.after(100, self._hide_window)
+
+    def _clear_input_only(self):
+        """Vymaže pouze input pole (pro automatické vymazání po překladu)"""
+        self.input_text.delete("1.0", tk.END)
 
     def _clear(self):
         """Vymaže textová pole"""

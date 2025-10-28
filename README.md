@@ -1,16 +1,20 @@
-# DeepL Translator - Desktop App
+# Transka - Desktop Translator
 
-Jednoduchá desktop aplikace pro rychlý překlad pomocí DeepL API s podporou system tray a globálních klávesových zkratek.
+Moderní desktop aplikace pro rychlý překlad pomocí DeepL API s dark theme a intuitivními klávesovými zkratkami.
 
 ## 🚀 Funkce
 
 - **System Tray**: Aplikace běží na pozadí v system tray
-- **Jediná klávesová zkratka `Win+P`**:
-  - **První stisk**: Otevře překladové okno s fokusem na input
-  - **Druhý stisk**: Přeloží text a zkopíruje do schránky + skryje okno
+- **Klávesové zkratky**:
+  - **`Win+P`** - Hlavní zkratka (1. stisk = otevře, 2. stisk = přeloží)
+  - **`Ctrl+P+P`** - Alternativní zkratka (dvojité rychlé stisknutí)
+  - **`ESC`** - Zavře okno bez překladu
+  - **`Ctrl+Enter`** - Přeloží text v okně
+- **Automatické vymazání**: Input pole se automaticky vymaže po úspěšném překladu
 - **Počítadlo znaků**: Sledování spotřeby DeepL API (Free: 500,000 znaků/měsíc)
 - **Varování při limitu**: Upozornění při dosažení 96% limitu
-- **Jednoduché GUI**: Minimalistické rozhraní s Tkinter
+- **Modern Dark Theme**: Cyberpunk design s Fira Code fontem
+- **Live reload**: Změny nastavení se aplikují okamžitě
 - **Konfigurovatelné**: Nastavení jazyků, API klíče a zkratek
 
 ## 📋 Požadavky
@@ -121,14 +125,21 @@ Aplikace se spustí v system tray. Klikněte na ikonu pro otevření menu.
 ## 🎮 Použití
 
 ### Základní workflow:
-1. Stiskněte `Win + P` pro otevření okna
+1. Stiskněte **`Win+P`** (nebo **`Ctrl+P+P`**) pro otevření okna
 2. Vložte text k překladu (okno má automatický fokus)
-3. Stiskněte `Win + P` znovu (nebo klikněte na "Přeložit")
+3. Stiskněte **`Win+P`** znovu (nebo **`Ctrl+Enter`**)
 4. Překlad se automaticky zkopíruje do schránky
-5. Okno se automaticky skryje
-6. Vložte překlad kamkoli pomocí `Ctrl + V`
+5. Input pole se **automaticky vymaže** (připraveno pro další překlad)
+6. Okno se automaticky skryje
+7. Vložte překlad kamkoli pomocí `Ctrl+V`
 
-**💡 Tip**: Stačí pamatovat jen `Win + P` - první stisk otevře, druhý přeloží!
+### Klávesové zkratky:
+- **`Win+P`**: Otevře okno / Přeloží text (toggle funkce)
+- **`Ctrl+P+P`**: Alternativa k Win+P (dvojité stisknutí < 0.5s)
+- **`ESC`**: Zavře okno bez překladu
+- **`Ctrl+Enter`**: Přeloží text (když je okno otevřené)
+
+**💡 Tip**: Input pole se automaticky vymaže po překladu, nemusíte mazat ručně!
 
 ### System Tray Menu:
 - **Zobrazit**: Otevře překladové okno
