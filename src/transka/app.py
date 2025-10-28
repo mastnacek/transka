@@ -11,6 +11,7 @@ import pystray
 from PIL import Image, ImageDraw
 from typing import Optional
 import sys
+import os
 
 from transka.config import Config
 from transka.deepl_translator import DeepLTranslator
@@ -209,6 +210,16 @@ class TranslatorApp:
         self.root = tk.Tk()
         self.root.title("Transka")
         self.root.geometry(f"{self.config.window_width}x{self.config.window_height}")
+
+        # Nastavení ikony okna
+        try:
+            # Cesta k ikoně v assets/
+            icon_path = os.path.join(os.path.dirname(__file__), "assets", "transka_icon.png")
+            if os.path.exists(icon_path):
+                icon_img = tk.PhotoImage(file=icon_path)
+                self.root.iconphoto(True, icon_img)
+        except Exception as e:
+            print(f"Nelze načíst ikonu: {e}")
 
         # Modern Dark Theme
         self._apply_theme()
@@ -546,7 +557,7 @@ class TranslatorApp:
             self.window_state = 0
 
     def _show_window(self):
-        """Zobrazí překladové okno"""
+        """Zobrazí překladové okno a vycentruje ho na střed obrazovky"""
         if not self.is_visible:
             # Uložení předchozího okna pro restore fokus
             try:
@@ -556,6 +567,20 @@ class TranslatorApp:
                 self.previous_window = None
 
             self.root.deiconify()
+
+            # Centrování okna na střed obrazovky
+            self.root.update_idletasks()  # Aktualizace geometrie
+            window_width = self.root.winfo_width()
+            window_height = self.root.winfo_height()
+            screen_width = self.root.winfo_screenwidth()
+            screen_height = self.root.winfo_screenheight()
+
+            # Výpočet pozice pro střed
+            x = (screen_width - window_width) // 2
+            y = (screen_height - window_height) // 2
+
+            self.root.geometry(f"{window_width}x{window_height}+{x}+{y}")
+
             self.root.lift()
             self.root.focus_force()
             self.input_text.focus()
