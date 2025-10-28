@@ -11,8 +11,9 @@ from PIL import Image, ImageDraw
 from typing import Optional
 import sys
 
-from config import Config
-from translator import DeepLTranslator, UsageInfo
+from src.config import Config
+from src.deepl_translator import DeepLTranslator
+from src.base_translator import UsageInfo
 
 
 class SettingsWindow:

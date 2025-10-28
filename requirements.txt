@@ -1,17 +1,20 @@
 # DeepL Translator App Dependencies
 
 # DeepL API klient
-deepl==1.18.0
+deepl>=1.18.0
 
 # GUI a system tray
-pystray==0.19.5
-Pillow==10.3.0
+pystray>=0.19.5
+Pillow>=10.3.0
 
 # Globální klávesové zkratky
-keyboard==0.13.5
+keyboard>=0.13.5
 
 # Práce se schránkou
-pyperclip==1.8.2
+pyperclip>=1.8.2
 
 # Konfigurace
-python-dotenv==1.0.1
+python-dotenv>=1.0.1
+
+# Optional: Google Translate API (pro budoucí použití)
+# googletrans>=4.0.0rc1

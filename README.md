@@ -21,27 +21,67 @@ Jednoduchá desktop aplikace pro rychlý překlad pomocí DeepL API s podporou s
 
 ## 🔧 Instalace
 
-1. **Naklonujte repozitář nebo stáhněte soubory**
+### Varianta A: Pomocí UV (doporučeno)
 
-2. **Vytvořte virtuální prostředí** (doporučeno):
+1. **Nainstalujte UV** (pokud ještě nemáte):
+```powershell
+# PowerShell
+irm https://astral.sh/uv/install.ps1 | iex
+```
+
+2. **Spusťte instalační script**:
+```bash
+# PowerShell
+.\install.ps1
+
+# Nebo CMD
+install.bat
+```
+
+3. **Nastavte DeepL API klíč** v `.env` souboru:
+```
+DEEPL_API_KEY=your-actual-api-key-here
+```
+
+4. **Spusťte aplikaci**:
+```bash
+# PowerShell (bez konzole)
+.\start.ps1
+
+# Nebo CMD
+start.bat
+```
+
+### Varianta B: Klasická instalace pomocí pip
+
+1. **Vytvořte virtuální prostředí**:
 ```bash
 python -m venv venv
 venv\Scripts\activate
 ```
 
-3. **Nainstalujte závislosti**:
+2. **Nainstalujte závislosti**:
 ```bash
 pip install -r requirements.txt
 ```
 
-4. **Vytvořte `.env` soubor**:
+3. **Vytvořte `.env` soubor**:
 ```bash
 copy .env.example .env
 ```
 
-5. **Vložte DeepL API klíč** do `.env`:
+4. **Vložte DeepL API klíč** do `.env`:
 ```
 DEEPL_API_KEY=your-actual-api-key-here
+```
+
+5. **Spusťte aplikaci**:
+```bash
+# Bez konzole (doporučeno)
+pythonw -m src.main
+
+# S konzolí (pro debugging)
+python -m src.main
 ```
 
 ## 🎯 Jak získat DeepL API klíč
@@ -53,8 +93,22 @@ DEEPL_API_KEY=your-actual-api-key-here
 
 ## 🏃 Spuštění
 
+### Pomocí UV:
 ```bash
-python main.py
+# PowerShell (bez konzole)
+.\start.ps1
+
+# CMD
+start.bat
+```
+
+### Klasicky:
+```bash
+# Bez konzole (doporučeno - aplikace běží na pozadí)
+pythonw -m src.main
+
+# S konzolí (pro debugging)
+python -m src.main
 ```
 
 Aplikace se spustí v system tray. Klikněte na ikonu pro otevření menu.
@@ -104,14 +158,24 @@ Formát: `15,234 / 500,000 znaků (3.0%)`
 
 ```
 transka/
-├── main.py           # Hlavní aplikace (GUI, tray, zkratky)
-├── translator.py     # DeepL API komunikace
-├── config.py         # Správa konfigurace
-├── requirements.txt  # Python závislosti
-├── .env             # Konfigurace (API klíč) - gitignored
-├── .env.example     # Příklad konfigurace
-├── config.json      # Uživatelské nastavení
-└── README.md        # Dokumentace
+├── src/
+│   ├── __init__.py           # Package inicializace
+│   ├── main.py               # Hlavní aplikace (GUI, tray, zkratky)
+│   ├── config.py             # Správa konfigurace
+│   ├── base_translator.py    # Abstraktní rozhraní pro překladače
+│   ├── deepl_translator.py   # DeepL API implementace
+│   ├── google_translator.py  # Google Translate (připraveno)
+│   └── translator.py         # Legacy wrapper (deprecated)
+├── install.bat               # Instalační script (Windows CMD)
+├── install.ps1               # Instalační script (PowerShell)
+├── start.bat                 # Spouštěcí script (CMD, bez konzole)
+├── start.ps1                 # Spouštěcí script (PowerShell, bez konzole)
+├── pyproject.toml            # UV/pip konfigurace
+├── requirements.txt          # Python závislosti (pip)
+├── .env                      # Konfigurace (API klíč) - gitignored
+├── .env.example              # Příklad konfigurace
+├── config.json               # Uživatelské nastavení - gitignored
+└── README.md                 # Dokumentace
 ```
 
 ## ⚠️ Známé problémy
@@ -119,12 +183,21 @@ transka/
 - **Globální zkratky**: Na některých systémech může být potřeba administrátorské oprávnění
 - **System Tray**: První spuštění může trvat déle kvůli vytvoření ikony
 
-## 🔮 Budoucí rozšíření
+## 🔮 Budoucí rozšíření a příprava
 
-- [ ] Přepnutí na Google Translate API po dosažení limitu DeepL
-- [ ] Historie překladů
-- [ ] Podpora více překladačů současně
-- [ ] Export/import nastavení
+### Připraveno (abstrakce implementována):
+- ✅ **Architektura pro více překladačů**: BaseTranslator abstrakce
+- ✅ **Google Translate placeholder**: Připraveno pro budoucí implementaci
+- ✅ **UV package manager**: Moderní instalace a správa závislostí
+- ✅ **Spouštění bez konzole**: .bat a .ps1 scripty
+
+### Plánováno:
+- [ ] **Automatické přepnutí na Google Translate** po dosažení 490k znaků DeepL limitu
+- [ ] **Google Translate implementace**: Dokončení google_translator.py
+- [ ] **Historie překladů**: Ukládání posledních N překladů
+- [ ] **Podpora více překladačů současně**: Výběr v nastavení
+- [ ] **Export/import nastavení**: Backup konfigurace
+- [ ] **Autostart s Windows**: Přidání do registry
 
 ## 📄 Licence
 
