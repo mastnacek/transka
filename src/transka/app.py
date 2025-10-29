@@ -139,9 +139,12 @@ class TranslatorApp:
 
     def _handle_main_hotkey(self):
         """
-        Zpracuje hlavní klávesovou zkratku (3-step workflow)
+        Zpracuje hlavní klávesovou zkratku (3-step workflow s smart detection)
+
         State 0 (HIDDEN) → zobraz okno → State 1 (SHOWN)
-        State 1 (SHOWN) → přelož text → State 2 (TRANSLATED)
+        State 1 (SHOWN):
+          - JE přeložený text v output? → zkopíruj a zavři (skip překladu)
+          - NENÍ přeložený text? → přelož text → State 2 (TRANSLATED)
         State 2 (TRANSLATED) → zkopíruj, vymaž, zavři, restore fokus → State 0 (HIDDEN)
         """
         state = self.workflow.get_state()
@@ -152,9 +155,20 @@ class TranslatorApp:
             self.workflow.set_state(TranslationWorkflow.STATE_SHOWN)
 
         elif state == TranslationWorkflow.STATE_SHOWN:
-            # Krok 2: Přeloží text
-            self.workflow.translate_with_display(self.root)
-            self.workflow.set_state(TranslationWorkflow.STATE_TRANSLATED)
+            # Smart detection: Pokud už existuje přeložený text (např. z Ctrl+Enter),
+            # přeskoč překlad a rovnou zkopíruj + zavři
+            translated_text = self.output_text.get("1.0", "end-1c").strip()
+
+            if translated_text:
+                # Existuje přeložený text → zkopíruj a zavři (jako krok 3)
+                self.workflow.copy_translation_and_clear()
+                self._hide_window()
+                self.workflow.restore_previous_window()
+                self.workflow.reset_state()
+            else:
+                # Žádný přeložený text → normální překlad (krok 2)
+                self.workflow.translate_with_display(self.root)
+                self.workflow.set_state(TranslationWorkflow.STATE_TRANSLATED)
 
         elif state == TranslationWorkflow.STATE_TRANSLATED:
             # Krok 3: Zkopíruje, vymaže, zavře

@@ -173,10 +173,24 @@ Aplikace se spustí v system tray. Klikněte na ikonu pro otevření menu.
 
 ### Alternativní zkratky:
 - **`ESC`**: Zavře okno kdykoli (resetuje workflow)
-- **`Ctrl+Enter`**: Rychlý překlad + kopírování + zavření (legacy - stará logika)
+- **`Ctrl+Enter`**: Přeloží text v okně (okno zůstane otevřené, state se NEMĚNÍ)
+  - **Smart workflow**: Další `Ctrl+P+P` detekuje přeložený text a rovnou zkopíruje + zavře
 - **Tlačítko "Přeložit"**: Stejné jako Ctrl+Enter
 
-**💡 Tip**: Nový workflow umožňuje zkontrolovat překlad před kopírováním!
+**💡 Tip**: Kombinujte Ctrl+Enter s Ctrl+P+P pro flexibilní workflow!
+
+### 🎯 Smart Detection:
+
+**Ctrl+P+P v state SHOWN inteligentně detekuje přeložený text:**
+- ✅ **Existuje překlad v output poli** → přeskoč překlad, zkopíruj a zavři (šetří čas!)
+- ❌ **Prázdné output pole** → normálně přelož (klasický 3-step workflow)
+
+**Příklad použití:**
+```
+1. Ctrl+P+P → otevře okno
+2. Napíšete text + Ctrl+Enter → přeloží (zkontrolujete překlad)
+3. Ctrl+P+P → detekuje překlad → zkopíruje a zavře (skip kroku 2!)
+```
 
 ## 💼 Praktické použití (Use Cases)
 
