@@ -157,8 +157,8 @@ class ThemeManager:
             foreground=[
                 ('selected', COLORS["accent_cyan"]),  # Active text = cyan
                 ('active', COLORS["text_primary"])    # Hover text
-            ],
-            expand=[('selected', [1, 1, 1, 0])]      # Expand to bottom
+            ]
+            # Odstraněno expand - tabs mají stejnou výšku
         )
 
     def get_fonts(self) -> Dict[str, Any]:

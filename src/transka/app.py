@@ -101,7 +101,6 @@ class TranslatorApp:
         self.tray_manager = TrayManager(
             app_name="Transka",
             on_show=self._show_window,
-            on_settings=self._show_settings_tab,
             on_quit=self._quit_app
         )
         self.tray_manager.start()

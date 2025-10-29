@@ -16,7 +16,6 @@ class TrayManager:
         self,
         app_name: str,
         on_show: Callable[[], None],
-        on_settings: Callable[[], None],
         on_quit: Callable[[], None]
     ):
         """
@@ -25,12 +24,10 @@ class TrayManager:
         Args:
             app_name: Název aplikace pro tooltip
             on_show: Callback pro zobrazení hlavního okna
-            on_settings: Callback pro zobrazení nastavení
             on_quit: Callback pro ukončení aplikace
         """
         self.app_name = app_name
         self.on_show = on_show
-        self.on_settings = on_settings
         self.on_quit = on_quit
         self.tray_icon: Optional[pystray.Icon] = None
 
@@ -48,10 +45,9 @@ class TrayManager:
 
     def start(self):
         """Spustí system tray ikonu v separátním vlákně"""
-        # Menu pro tray
+        # Menu pro tray (Nastavení jsou teď v tabech, není třeba separátní položka)
         menu = pystray.Menu(
             pystray.MenuItem("Zobrazit", self.on_show),
-            pystray.MenuItem("Nastavení", self.on_settings),
             pystray.MenuItem("Ukončit", self.on_quit)
         )
 
