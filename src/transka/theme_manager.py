@@ -148,6 +148,22 @@ class ThemeManager:
             borderwidth=0
         )
 
+        # Vlastní layout pro tabs - všechny stejná výška
+        style.layout("TNotebook.Tab", [
+            ("Notebook.tab", {
+                "sticky": "nswe",
+                "children": [
+                    ("Notebook.padding", {
+                        "side": "top",
+                        "sticky": "nswe",
+                        "children": [
+                            ("Notebook.label", {"side": "top", "sticky": ""})
+                        ]
+                    })
+                ]
+            })
+        ])
+
         # Tab active/hover states
         style.map('TNotebook.Tab',
             background=[
@@ -158,7 +174,6 @@ class ThemeManager:
                 ('selected', COLORS["accent_cyan"]),  # Active text = cyan
                 ('active', COLORS["text_primary"])    # Hover text
             ]
-            # Odstraněno expand - tabs mají stejnou výšku
         )
 
     def get_fonts(self) -> Dict[str, Any]:
