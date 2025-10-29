@@ -84,26 +84,26 @@ class SettingsWindow:
         self.target_lang_combo.grid(row=3, column=1, pady=5, padx=5)
 
         # Klávesová zkratka - hlavní
-        ttk.Label(main_frame, text="Hlavní zkratka (Win+P):").grid(row=4, column=0, sticky=tk.W, pady=5)
+        ttk.Label(main_frame, text="Hlavní zkratka:").grid(row=4, column=0, sticky=tk.W, pady=5)
         self.hotkey_main_entry = ttk.Entry(main_frame, width=50)
         self.hotkey_main_entry.grid(row=4, column=1, pady=5, padx=5)
 
         ttk.Label(main_frame, text="", font=("", 8)).grid(row=5, column=0, columnspan=2, sticky=tk.W, pady=0)
         ttk.Label(
             main_frame,
-            text="Tip: První stisk otevře okno, druhý přeloží a zkopíruje",
+            text="Formát: ctrl+p (dvojité stisknutí = Ctrl+P+P). Příklady: win+p, alt+t",
             font=("", 8),
             foreground="gray"
         ).grid(row=5, column=0, columnspan=2, sticky=tk.W, pady=0, padx=5)
 
         # Klávesová zkratka - swap jazyků
-        ttk.Label(main_frame, text="Swap jazyků (Ctrl+S+S):").grid(row=6, column=0, sticky=tk.W, pady=5)
+        ttk.Label(main_frame, text="Swap jazyků:").grid(row=6, column=0, sticky=tk.W, pady=5)
         self.hotkey_swap_entry = ttk.Entry(main_frame, width=50)
         self.hotkey_swap_entry.grid(row=6, column=1, pady=5, padx=5)
 
         ttk.Label(
             main_frame,
-            text="Tip: Dvojité stisknutí prohodí zdrojový a cílový jazyk",
+            text="Formát: ctrl+s (dvojité stisknutí = Ctrl+S+S). Prohodí CS↔EN",
             font=("", 8),
             foreground="gray"
         ).grid(row=7, column=0, columnspan=2, sticky=tk.W, pady=0, padx=5)
