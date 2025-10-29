@@ -222,7 +222,7 @@ class GUIBuilder:
 
         ttk.Button(
             button_frame,
-            text=f"Přeložit ({self.hotkey_main})",
+            text="Přeložit (Ctrl+Enter)",
             command=on_translate
         ).pack(side=tk.LEFT, padx=5)
 
