@@ -210,7 +210,7 @@ class GUIBuilderV2:
         on_close: Callable[[], None]
     ) -> ttk.Frame:
         """Vytvoří tab pro překlad"""
-        frame = ttk.Frame(self.notebook)
+        frame = ttk.Frame(self.content_container)
 
         # Konfigurace grid
         frame.columnconfigure(0, weight=1)
@@ -328,7 +328,7 @@ class GUIBuilderV2:
     ) -> ttk.Frame:
         """Vytvoří tab pro nastavení"""
         # Main frame pro settings
-        main_settings_frame = ttk.Frame(self.notebook, padding="10")
+        main_settings_frame = ttk.Frame(self.content_container, padding="10")
 
         # Scrollable frame (pokud settings přeteče)
         canvas = tk.Canvas(main_settings_frame, bg=COLORS["bg_dark"], highlightthickness=0)
