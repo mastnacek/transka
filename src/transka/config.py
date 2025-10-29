@@ -21,6 +21,7 @@ class Config:
         "target_lang": "EN-US",
         "translator_service": "deepl",  # "deepl" nebo "google"
         "hotkey_main": "win+p",  # Jediná zkratka: 1. stisk = otevře, 2. stisk = přeloží
+        "hotkey_swap": "ctrl+s",  # Swap jazyků: double-press Ctrl+S+S
         "window_width": 600,
         "window_height": 400,
         "usage_warning_threshold": 480000  # Varování při 96% limitu (480k z 500k)
@@ -102,6 +103,11 @@ class Config:
     def hotkey_main(self) -> str:
         """Hlavní klávesová zkratka (Win+P) - otevře okno / přeloží"""
         return self.config.get("hotkey_main", "win+p")  # Fallback pro staré konfigurace
+
+    @property
+    def hotkey_swap(self) -> str:
+        """Zkratka pro swap jazyků (Ctrl+S+S double-press)"""
+        return self.config.get("hotkey_swap", "ctrl+s")  # Fallback pro staré konfigurace
 
     @property
     def window_width(self) -> int:

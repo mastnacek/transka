@@ -18,7 +18,7 @@ class SettingsWindow:
     def __init__(self, parent, parent_app, config: Config, translator: BaseTranslator, on_save_callback):
         self.window = tk.Toplevel(parent)
         self.window.title("Nastavení - Transka")
-        self.window.geometry("500x450")
+        self.window.geometry("500x520")
         self.window.resizable(False, False)
 
         # Dark theme pro Settings okno
@@ -83,7 +83,7 @@ class SettingsWindow:
         )
         self.target_lang_combo.grid(row=3, column=1, pady=5, padx=5)
 
-        # Klávesová zkratka
+        # Klávesová zkratka - hlavní
         ttk.Label(main_frame, text="Hlavní zkratka (Win+P):").grid(row=4, column=0, sticky=tk.W, pady=5)
         self.hotkey_main_entry = ttk.Entry(main_frame, width=50)
         self.hotkey_main_entry.grid(row=4, column=1, pady=5, padx=5)
@@ -96,14 +96,26 @@ class SettingsWindow:
             foreground="gray"
         ).grid(row=5, column=0, columnspan=2, sticky=tk.W, pady=0, padx=5)
 
+        # Klávesová zkratka - swap jazyků
+        ttk.Label(main_frame, text="Swap jazyků (Ctrl+S+S):").grid(row=6, column=0, sticky=tk.W, pady=5)
+        self.hotkey_swap_entry = ttk.Entry(main_frame, width=50)
+        self.hotkey_swap_entry.grid(row=6, column=1, pady=5, padx=5)
+
+        ttk.Label(
+            main_frame,
+            text="Tip: Dvojité stisknutí prohodí zdrojový a cílový jazyk",
+            font=("", 8),
+            foreground="gray"
+        ).grid(row=7, column=0, columnspan=2, sticky=tk.W, pady=0, padx=5)
+
         # Práh varování
-        ttk.Label(main_frame, text="Varování při (znacích):").grid(row=6, column=0, sticky=tk.W, pady=5)
+        ttk.Label(main_frame, text="Varování při (znacích):").grid(row=8, column=0, sticky=tk.W, pady=5)
         self.warning_threshold_entry = ttk.Entry(main_frame, width=50)
-        self.warning_threshold_entry.grid(row=6, column=1, pady=5, padx=5)
+        self.warning_threshold_entry.grid(row=8, column=1, pady=5, padx=5)
 
         # Tlačítka
         button_frame = ttk.Frame(main_frame)
-        button_frame.grid(row=7, column=0, columnspan=2, pady=20)
+        button_frame.grid(row=9, column=0, columnspan=2, pady=20)
 
         ttk.Button(button_frame, text="Uložit", command=self._save_settings).pack(side=tk.LEFT, padx=5)
         ttk.Button(button_frame, text="Test API", command=self._test_api).pack(side=tk.LEFT, padx=5)
@@ -116,6 +128,7 @@ class SettingsWindow:
         self.source_lang_var.set(self.config.source_lang)
         self.target_lang_var.set(self.config.target_lang)
         self.hotkey_main_entry.insert(0, self.config.hotkey_main)
+        self.hotkey_swap_entry.insert(0, self.config.hotkey_swap)
         self.warning_threshold_entry.insert(0, str(self.config.usage_warning_threshold))
 
     def _save_settings(self):
@@ -131,6 +144,7 @@ class SettingsWindow:
         self.config.set("source_lang", self.source_lang_var.get())
         self.config.set("target_lang", self.target_lang_var.get())
         self.config.set("hotkey_main", self.hotkey_main_entry.get().strip())
+        self.config.set("hotkey_swap", self.hotkey_swap_entry.get().strip())
 
         try:
             threshold = int(self.warning_threshold_entry.get().strip())
@@ -139,20 +153,24 @@ class SettingsWindow:
             messagebox.showerror("Chyba", "Neplatná hodnota pro práh varování")
             return
 
-        # Okamžitá aplikace změn bez restartu
-        old_hotkey = self.config.hotkey_main
-        new_hotkey = self.hotkey_main_entry.get().strip()
+        # Okamžitá aplikace změn bez restartu - hlavní zkratka
+        old_main_hotkey = self.config.hotkey_main
+        new_main_hotkey = self.hotkey_main_entry.get().strip()
 
-        # Pokud se změnila zkratka, re-registruj ji
-        if old_hotkey != new_hotkey:
-            try:
-                keyboard.remove_hotkey(old_hotkey)
-            except:
-                pass
-            try:
-                keyboard.add_hotkey(new_hotkey, self.parent._handle_main_hotkey)
-            except Exception as e:
-                messagebox.showerror("Chyba", f"Nelze nastavit zkratku {new_hotkey}: {e}")
+        if old_main_hotkey != new_main_hotkey:
+            success = self.parent.hotkey_manager.update_main_hotkey(new_main_hotkey)
+            if not success:
+                messagebox.showerror("Chyba", f"Nelze nastavit hlavní zkratku {new_main_hotkey}")
+                return
+
+        # Okamžitá aplikace změn - swap zkratka
+        old_swap_hotkey = self.config.hotkey_swap
+        new_swap_hotkey = self.hotkey_swap_entry.get().strip()
+
+        if old_swap_hotkey != new_swap_hotkey:
+            success = self.parent.hotkey_manager.update_swap_hotkey(new_swap_hotkey)
+            if not success:
+                messagebox.showerror("Chyba", f"Nelze nastavit swap zkratku {new_swap_hotkey}")
                 return
 
         messagebox.showinfo("Úspěch", "Nastavení aplikováno okamžitě!")

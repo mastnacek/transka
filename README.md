@@ -24,6 +24,7 @@ Moderní desktop aplikace pro rychlý překlad s podporou **DeepL** a **Google T
     - 1. stisk = otevře okno
     - 2. stisk = přeloží text
     - 3. stisk = zkopíruje a zavře
+  - **`Ctrl+S+S`** - Swap směru překladu (CS→EN změní na EN→CS a zpět)
   - **`ESC`** - Zavře okno bez překladu
   - **`Ctrl+Enter`** - Přeloží text v okně (legacy)
 - **Automatické vymazání**: Input pole se automaticky vymaže po úspěšném překladu
@@ -139,7 +140,9 @@ Aplikace se spustí v system tray. Klikněte na ikonu pro otevření menu.
 - **API klíč**: DeepL API klíč (Free nebo Pro) - pouze pro DeepL
 - **Zdrojový jazyk**: Jazyk vstupního textu (AUTO pro automatickou detekci)
 - **Cílový jazyk**: Jazyk překladu
-- **Klávesová zkratka**: Hlavní zkratka (výchozí: Ctrl+P+P double-press, lze změnit)
+- **Klávesové zkratky**:
+  - **Hlavní zkratka**: Výchozí `Ctrl+P+P` (double-press) - lze změnit v nastavení
+  - **Swap jazyků**: Výchozí `Ctrl+S+S` (double-press) - lze změnit v nastavení
 - **Práh varování**: Limit znaků pro varování - pouze pro DeepL (výchozí: 480,000)
 
 ## 🎮 Použití
@@ -172,12 +175,17 @@ Aplikace se spustí v system tray. Klikněte na ikonu pro otevření menu.
 ```
 
 ### Alternativní zkratky:
+- **`Ctrl+S+S`**: Swap směru překladu (CS→EN ↔ EN→CS)
+  - Dvojité rychlé stisknutí Ctrl+S (< 0.5s)
+  - Okamžitě prohodí zdrojový a cílový jazyk
+  - Funguje kdykoliv (okno může být zavřené)
+  - Uloží se do konfigurace - změna zůstává i po restartu
 - **`ESC`**: Zavře okno kdykoli (resetuje workflow)
 - **`Ctrl+Enter`**: Přeloží text v okně (okno zůstane otevřené, state se NEMĚNÍ)
   - **Smart workflow**: Další `Ctrl+P+P` detekuje přeložený text a rovnou zkopíruje + zavře
 - **Tlačítko "Přeložit"**: Stejné jako Ctrl+Enter
 
-**💡 Tip**: Kombinujte Ctrl+Enter s Ctrl+P+P pro flexibilní workflow!
+**💡 Tip**: Kombinujte Ctrl+S+S a Ctrl+P+P pro ultra-rychlý workflow!
 
 ### 🎯 Smart Detection:
 
@@ -423,9 +431,10 @@ transka/
 ### 📋 Plánováno:
 
 #### 🔥 Vysoká priorita (klávesové zkratky):
-- [ ] **Přepnutí směru jazyků** - globální zkratka (pravděpodobně Ctrl+S+S)
+- [x] **Přepnutí směru jazyků** - `Ctrl+S+S` ✅ IMPLEMENTOVÁNO
   - Rychlá změna CS→EN na EN→CS a zpět
   - Bez nutnosti otevírat Settings
+  - Konfigurovatelné v Settings okně
 - [ ] **Vymazání input pole** - globální zkratka (pravděpodobně Ctrl+C+C)
   - Rychlé vyčištění textu k překladu
   - Alternativa k tlačítku "Vymazat"

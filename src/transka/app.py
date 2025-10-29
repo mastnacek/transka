@@ -85,7 +85,9 @@ class TranslatorApp:
         # Hotkey Manager
         self.hotkey_manager = HotkeyManager(
             main_hotkey=self.config.hotkey_main,
-            workflow_callback=self._handle_main_hotkey
+            swap_hotkey=self.config.hotkey_swap,
+            workflow_callback=self._handle_main_hotkey,
+            swap_callback=self._swap_languages
         )
         self.hotkey_manager.register_hotkeys()
 
@@ -215,6 +217,27 @@ class TranslatorApp:
     def _clear(self):
         """Vymaže textová pole"""
         self.workflow.clear_all()
+
+    def _swap_languages(self):
+        """Prohodí zdrojový a cílový jazyk (Ctrl+S+S)"""
+        # Swap jazyků v config
+        old_source = self.config.source_lang
+        old_target = self.config.target_lang
+
+        self.config.set("source_lang", old_target)
+        self.config.set("target_lang", old_source)
+
+        # Aktualizace workflow
+        self.workflow.update_languages(self.config.source_lang, self.config.target_lang)
+
+        # Aktualizace GUI label
+        self.lang_label.config(text=self._get_language_display())
+
+        # Zobrazení notifikace
+        self._update_status(
+            f"🔄 Směr změněn: {self.config.source_lang} → {self.config.target_lang}",
+            COLORS["status_ready"]
+        )
 
     def _update_status(self, text: str, color: str):
         """Aktualizuje status label"""
