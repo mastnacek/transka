@@ -462,4 +462,4 @@ MIT License
 
 ## 👨‍💻 Autor
 
-DeepL Translator App - 2025
+Jaroslav Havel ( mastnacek ) - 2025
