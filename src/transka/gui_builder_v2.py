@@ -54,9 +54,12 @@ class GUIBuilderV2:
         self.settings_tab = None
         self.current_tab = None
 
-        # Tab buttons
+        # Tab buttons (Frame)
         self.translation_tab_btn = None
         self.settings_tab_btn = None
+        # Tab labels (Label inside Frame)
+        self.translation_tab_label = None
+        self.settings_tab_label = None
         self.content_container = None
 
         # Translation widgets
@@ -117,9 +120,14 @@ class GUIBuilderV2:
         # Custom tab buttons (místo ttk.Notebook)
         self._create_tab_buttons(main_frame)
 
-        # Container pro tab content
-        self.content_container = ttk.Frame(main_frame)
-        self.content_container.grid(row=2, column=0, sticky=(tk.W, tk.E, tk.N, tk.S))
+        # Container pro tab content - SUNKEN border pro vizuální hloubku
+        self.content_container = tk.Frame(
+            main_frame,
+            relief=tk.SUNKEN,
+            borderwidth=2,
+            bg=COLORS["bg_dark"]
+        )
+        self.content_container.grid(row=2, column=0, sticky=(tk.W, tk.E, tk.N, tk.S), padx=0, pady=(0, 0))
         self.content_container.columnconfigure(0, weight=1)
         self.content_container.rowconfigure(0, weight=1)
 
@@ -170,38 +178,68 @@ class GUIBuilderV2:
         self.lang_label.pack(side=tk.LEFT)
 
     def _create_tab_buttons(self, parent: ttk.Frame):
-        """Vytvoří vlastní tab tlačítka (místo ttk.Notebook)"""
-        tab_frame = tk.Frame(parent, bg=COLORS["bg_dark"], height=40)
-        tab_frame.grid(row=1, column=0, sticky=(tk.W, tk.E), pady=(0, 0))
-        tab_frame.grid_propagate(False)
+        """Vytvoří vlastní tab tlačítka s border styling"""
+        # Tab bar container
+        tab_bar_container = tk.Frame(parent, bg=COLORS["bg_dark"])
+        tab_bar_container.grid(row=1, column=0, sticky=(tk.W, tk.E), pady=(0, 0))
 
-        # Tab button pro Překlad
-        self.translation_tab_btn = tk.Label(
+        tab_frame = tk.Frame(tab_bar_container, bg=COLORS["bg_dark"], height=40)
+        tab_frame.pack(fill=tk.X, padx=0, pady=0)
+        tab_frame.pack_propagate(False)
+
+        # Tab button pro Překlad - SUNKEN (aktivní)
+        self.translation_tab_btn = tk.Frame(
             tab_frame,
+            relief=tk.SUNKEN,
+            borderwidth=2,
+            bg=COLORS["bg_dark"],
+            cursor="hand2"
+        )
+        self.translation_tab_btn.pack(side=tk.LEFT, fill=tk.BOTH, expand=True, padx=2, pady=2)
+
+        self.translation_tab_label = tk.Label(
+            self.translation_tab_btn,
             text="  Překlad  ",
             bg=COLORS["bg_dark"],
             fg=COLORS["accent_cyan"],
             font=self.fonts["sans_font_bold"],
-            cursor="hand2",
-            padx=20,
-            pady=10
+            cursor="hand2"
         )
-        self.translation_tab_btn.pack(side=tk.LEFT)
-        self.translation_tab_btn.bind("<Button-1>", lambda e: self.switch_to_translation_tab())
+        self.translation_tab_label.pack(fill=tk.BOTH, expand=True, padx=15, pady=8)
 
-        # Tab button pro Nastavení
-        self.settings_tab_btn = tk.Label(
+        self.translation_tab_btn.bind("<Button-1>", lambda e: self.switch_to_translation_tab())
+        self.translation_tab_label.bind("<Button-1>", lambda e: self.switch_to_translation_tab())
+
+        # Tab button pro Nastavení - RAISED (neaktivní)
+        self.settings_tab_btn = tk.Frame(
             tab_frame,
+            relief=tk.RAISED,
+            borderwidth=2,
+            bg=COLORS["bg_darker"],
+            cursor="hand2"
+        )
+        self.settings_tab_btn.pack(side=tk.LEFT, fill=tk.BOTH, expand=True, padx=2, pady=2)
+
+        self.settings_tab_label = tk.Label(
+            self.settings_tab_btn,
             text="  Nastavení  ",
             bg=COLORS["bg_darker"],
             fg=COLORS["text_secondary"],
             font=self.fonts["sans_font"],
-            cursor="hand2",
-            padx=20,
-            pady=10
+            cursor="hand2"
         )
-        self.settings_tab_btn.pack(side=tk.LEFT)
+        self.settings_tab_label.pack(fill=tk.BOTH, expand=True, padx=15, pady=8)
+
         self.settings_tab_btn.bind("<Button-1>", lambda e: self.switch_to_settings_tab())
+        self.settings_tab_label.bind("<Button-1>", lambda e: self.switch_to_settings_tab())
+
+        # Separator line - neon cyan accent
+        separator = tk.Frame(
+            tab_bar_container,
+            bg=COLORS["accent_cyan"],
+            height=2
+        )
+        separator.pack(fill=tk.X, padx=0, pady=0)
 
     def _create_translation_tab(
         self,
@@ -484,28 +522,46 @@ class GUIBuilderV2:
     def _update_tab_styles(self):
         """Aktualizuje styling tab buttonů podle aktivního tabu"""
         if self.current_tab == "translation":
-            # Translation tab je aktivní
+            # Translation tab je aktivní - SUNKEN
             self.translation_tab_btn.config(
+                relief=tk.SUNKEN,
+                bg=COLORS["bg_dark"]
+            )
+            self.translation_tab_label.config(
                 bg=COLORS["bg_dark"],
                 fg=COLORS["accent_cyan"],
                 font=self.fonts["sans_font_bold"]
             )
+            # Settings tab je neaktivní - RAISED
             self.settings_tab_btn.config(
+                relief=tk.RAISED,
+                bg=COLORS["bg_darker"]
+            )
+            self.settings_tab_label.config(
                 bg=COLORS["bg_darker"],
                 fg=COLORS["text_secondary"],
                 font=self.fonts["sans_font"]
             )
         else:
-            # Settings tab je aktivní
-            self.translation_tab_btn.config(
-                bg=COLORS["bg_darker"],
-                fg=COLORS["text_secondary"],
-                font=self.fonts["sans_font"]
-            )
+            # Settings tab je aktivní - SUNKEN
             self.settings_tab_btn.config(
+                relief=tk.SUNKEN,
+                bg=COLORS["bg_dark"]
+            )
+            self.settings_tab_label.config(
                 bg=COLORS["bg_dark"],
                 fg=COLORS["accent_cyan"],
                 font=self.fonts["sans_font_bold"]
+            )
+            # Translation tab je neaktivní - RAISED
+            self.translation_tab_btn.config(
+                relief=tk.RAISED,
+                bg=COLORS["bg_darker"]
+            )
+            self.translation_tab_label.config(
+                bg=COLORS["bg_darker"],
+                fg=COLORS["text_secondary"],
+                font=self.fonts["sans_font"]
             )
 
     def get_settings_values(self) -> Dict[str, Any]:
