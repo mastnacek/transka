@@ -38,16 +38,11 @@ class HotkeyManager:
     def register_hotkeys(self):
         """Zaregistruje všechny globální klávesové zkratky"""
         try:
-            # Hlavní zkratka (např. Win+P)
-            keyboard.add_hotkey(self.main_hotkey, self.workflow_callback)
+            # Hlavní zkratka (výchozí: Ctrl+P pro double-press detection)
+            keyboard.add_hotkey(self.main_hotkey, self._handle_ctrl_p)
             self._registered_hotkeys.append(self.main_hotkey)
 
-            # Ctrl+P+P jako alternativní zkratka (globální)
-            # Používáme tracking času pro detekci dvojitého stisku
-            keyboard.add_hotkey('ctrl+p', self._handle_ctrl_p)
-            self._registered_hotkeys.append('ctrl+p')
-
-            # Swap jazyků zkratka (např. Ctrl+S+S double-press)
+            # Swap jazyků zkratka (výchozí: Ctrl+S pro double-press detection)
             keyboard.add_hotkey(self.swap_hotkey, self._handle_swap)
             self._registered_hotkeys.append(self.swap_hotkey)
 
@@ -55,7 +50,7 @@ class HotkeyManager:
             print(f"Chyba při nastavování zkratek: {e}")
 
     def _handle_ctrl_p(self):
-        """Globální handler pro Ctrl+P (double-press detection)"""
+        """Globální handler pro hlavní zkratku (double-press detection)"""
         current_time = time.time()
         if current_time - self._last_ctrl_p_time < 0.5:
             # Dvojité stisknutí < 0.5s
@@ -92,8 +87,8 @@ class HotkeyManager:
                 keyboard.remove_hotkey(self.main_hotkey)
                 self._registered_hotkeys.remove(self.main_hotkey)
 
-            # Přidat novou zkratku
-            keyboard.add_hotkey(new_hotkey, self.workflow_callback)
+            # Přidat novou zkratku s double-press detekcí
+            keyboard.add_hotkey(new_hotkey, self._handle_ctrl_p)
             self._registered_hotkeys.append(new_hotkey)
             self.main_hotkey = new_hotkey
             return True
