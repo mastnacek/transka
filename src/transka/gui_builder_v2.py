@@ -210,25 +210,27 @@ class GUIBuilderV2:
         self.translation_tab_btn.bind("<Button-1>", lambda e: self.switch_to_translation_tab())
         self.translation_tab_label.bind("<Button-1>", lambda e: self.switch_to_translation_tab())
 
-        # Tab button pro Nastavení - RAISED (neaktivní)
+        # Tab button pro Nastavení - RAISED (neaktivní) - pouze emoji
         self.settings_tab_btn = tk.Frame(
             tab_frame,
             relief=tk.RAISED,
             borderwidth=2,
             bg=COLORS["bg_darker"],
-            cursor="hand2"
+            cursor="hand2",
+            width=60  # Menší šířka jen pro emoji
         )
-        self.settings_tab_btn.pack(side=tk.LEFT, fill=tk.BOTH, expand=True, padx=2, pady=2)
+        self.settings_tab_btn.pack(side=tk.LEFT, padx=2, pady=2)
+        self.settings_tab_btn.pack_propagate(False)
 
         self.settings_tab_label = tk.Label(
             self.settings_tab_btn,
-            text="  Nastavení  ",
+            text="⚙️",
             bg=COLORS["bg_darker"],
             fg=COLORS["text_secondary"],
-            font=self.fonts["sans_font"],
+            font=("Segoe UI Emoji", 20),  # Větší emoji font
             cursor="hand2"
         )
-        self.settings_tab_label.pack(fill=tk.BOTH, expand=True, padx=15, pady=8)
+        self.settings_tab_label.pack(fill=tk.BOTH, expand=True)
 
         self.settings_tab_btn.bind("<Button-1>", lambda e: self.switch_to_settings_tab())
         self.settings_tab_label.bind("<Button-1>", lambda e: self.switch_to_settings_tab())
