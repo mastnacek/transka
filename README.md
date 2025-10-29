@@ -25,6 +25,7 @@ Moderní desktop aplikace pro rychlý překlad s podporou **DeepL** a **Google T
     - 2. stisk = přeloží text
     - 3. stisk = zkopíruje a zavře
   - **`Ctrl+S+S`** - Swap směru překladu (CS→EN změní na EN→CS a zpět)
+  - **`Ctrl+C+C`** - Vymaže input pole (rychlé vyčištění textu)
   - **`ESC`** - Zavře okno bez překladu
   - **`Ctrl+Enter`** - Přeloží text v okně (legacy)
 - **Automatické vymazání**: Input pole se automaticky vymaže po úspěšném překladu
@@ -143,6 +144,7 @@ Aplikace se spustí v system tray. Klikněte na ikonu pro otevření menu.
 - **Klávesové zkratky**:
   - **Hlavní zkratka**: Výchozí `Ctrl+P+P` (double-press) - lze změnit v nastavení
   - **Swap jazyků**: Výchozí `Ctrl+S+S` (double-press) - lze změnit v nastavení
+  - **Vymazat input**: Výchozí `Ctrl+C+C` (double-press) - lze změnit v nastavení
 - **Práh varování**: Limit znaků pro varování - pouze pro DeepL (výchozí: 480,000)
 
 ## 🎮 Použití
@@ -180,12 +182,17 @@ Aplikace se spustí v system tray. Klikněte na ikonu pro otevření menu.
   - Okamžitě prohodí zdrojový a cílový jazyk
   - Funguje kdykoliv (okno může být zavřené)
   - Uloží se do konfigurace - změna zůstává i po restartu
+- **`Ctrl+C+C`**: Vymaže input pole
+  - Dvojité rychlé stisknutí Ctrl+C (< 0.5s)
+  - Rychlé vyčištění textu k překladu
+  - Alternativa k tlačítku "Vymazat"
+  - Funguje pouze když je okno otevřené
 - **`ESC`**: Zavře okno kdykoli (resetuje workflow)
 - **`Ctrl+Enter`**: Přeloží text v okně (okno zůstane otevřené, state se NEMĚNÍ)
   - **Smart workflow**: Další `Ctrl+P+P` detekuje přeložený text a rovnou zkopíruje + zavře
 - **Tlačítko "Přeložit"**: Stejné jako Ctrl+Enter
 
-**💡 Tip**: Kombinujte Ctrl+S+S a Ctrl+P+P pro ultra-rychlý workflow!
+**💡 Tip**: Kombinujte všechny zkratky pro ultra-rychlý workflow!
 
 ### 🎯 Smart Detection:
 
@@ -435,9 +442,10 @@ transka/
   - Rychlá změna CS→EN na EN→CS a zpět
   - Bez nutnosti otevírat Settings
   - Konfigurovatelné v Settings okně
-- [ ] **Vymazání input pole** - globální zkratka (pravděpodobně Ctrl+C+C)
+- [x] **Vymazání input pole** - `Ctrl+C+C` ✅ IMPLEMENTOVÁNO
   - Rychlé vyčištění textu k překladu
   - Alternativa k tlačítku "Vymazat"
+  - Konfigurovatelné v Settings okně
 
 #### 🚀 Další features:
 - [ ] **Automatické přepnutí na Google Translate** po dosažení 490k znaků DeepL limitu

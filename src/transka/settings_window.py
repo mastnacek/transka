@@ -18,7 +18,7 @@ class SettingsWindow:
     def __init__(self, parent, parent_app, config: Config, translator: BaseTranslator, on_save_callback):
         self.window = tk.Toplevel(parent)
         self.window.title("Nastavení - Transka")
-        self.window.geometry("500x520")
+        self.window.geometry("500x590")
         self.window.resizable(False, False)
 
         # Dark theme pro Settings okno
@@ -108,14 +108,26 @@ class SettingsWindow:
             foreground="gray"
         ).grid(row=7, column=0, columnspan=2, sticky=tk.W, pady=0, padx=5)
 
+        # Klávesová zkratka - vymazání input pole
+        ttk.Label(main_frame, text="Vymazat input:").grid(row=8, column=0, sticky=tk.W, pady=5)
+        self.hotkey_clear_entry = ttk.Entry(main_frame, width=50)
+        self.hotkey_clear_entry.grid(row=8, column=1, pady=5, padx=5)
+
+        ttk.Label(
+            main_frame,
+            text="Formát: ctrl+c (dvojité stisknutí = Ctrl+C+C). Vymaže input pole",
+            font=("", 8),
+            foreground="gray"
+        ).grid(row=9, column=0, columnspan=2, sticky=tk.W, pady=0, padx=5)
+
         # Práh varování
-        ttk.Label(main_frame, text="Varování při (znacích):").grid(row=8, column=0, sticky=tk.W, pady=5)
+        ttk.Label(main_frame, text="Varování při (znacích):").grid(row=10, column=0, sticky=tk.W, pady=5)
         self.warning_threshold_entry = ttk.Entry(main_frame, width=50)
-        self.warning_threshold_entry.grid(row=8, column=1, pady=5, padx=5)
+        self.warning_threshold_entry.grid(row=10, column=1, pady=5, padx=5)
 
         # Tlačítka
         button_frame = ttk.Frame(main_frame)
-        button_frame.grid(row=9, column=0, columnspan=2, pady=20)
+        button_frame.grid(row=11, column=0, columnspan=2, pady=20)
 
         ttk.Button(button_frame, text="Uložit", command=self._save_settings).pack(side=tk.LEFT, padx=5)
         ttk.Button(button_frame, text="Test API", command=self._test_api).pack(side=tk.LEFT, padx=5)
@@ -129,6 +141,7 @@ class SettingsWindow:
         self.target_lang_var.set(self.config.target_lang)
         self.hotkey_main_entry.insert(0, self.config.hotkey_main)
         self.hotkey_swap_entry.insert(0, self.config.hotkey_swap)
+        self.hotkey_clear_entry.insert(0, self.config.hotkey_clear)
         self.warning_threshold_entry.insert(0, str(self.config.usage_warning_threshold))
 
     def _save_settings(self):
@@ -145,6 +158,7 @@ class SettingsWindow:
         self.config.set("target_lang", self.target_lang_var.get())
         self.config.set("hotkey_main", self.hotkey_main_entry.get().strip())
         self.config.set("hotkey_swap", self.hotkey_swap_entry.get().strip())
+        self.config.set("hotkey_clear", self.hotkey_clear_entry.get().strip())
 
         try:
             threshold = int(self.warning_threshold_entry.get().strip())
@@ -171,6 +185,16 @@ class SettingsWindow:
             success = self.parent.hotkey_manager.update_swap_hotkey(new_swap_hotkey)
             if not success:
                 messagebox.showerror("Chyba", f"Nelze nastavit swap zkratku {new_swap_hotkey}")
+                return
+
+        # Okamžitá aplikace změn - clear zkratka
+        old_clear_hotkey = self.config.hotkey_clear
+        new_clear_hotkey = self.hotkey_clear_entry.get().strip()
+
+        if old_clear_hotkey != new_clear_hotkey:
+            success = self.parent.hotkey_manager.update_clear_hotkey(new_clear_hotkey)
+            if not success:
+                messagebox.showerror("Chyba", f"Nelze nastavit clear zkratku {new_clear_hotkey}")
                 return
 
         messagebox.showinfo("Úspěch", "Nastavení aplikováno okamžitě!")

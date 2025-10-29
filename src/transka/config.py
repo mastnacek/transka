@@ -22,6 +22,7 @@ class Config:
         "translator_service": "deepl",  # "deepl" nebo "google"
         "hotkey_main": "ctrl+p",  # Hlavní zkratka: double-press Ctrl+P+P
         "hotkey_swap": "ctrl+s",  # Swap jazyků: double-press Ctrl+S+S
+        "hotkey_clear": "ctrl+c",  # Vymazání input pole: double-press Ctrl+C+C
         "window_width": 600,
         "window_height": 400,
         "usage_warning_threshold": 480000  # Varování při 96% limitu (480k z 500k)
@@ -108,6 +109,11 @@ class Config:
     def hotkey_swap(self) -> str:
         """Zkratka pro swap jazyků (Ctrl+S+S double-press)"""
         return self.config.get("hotkey_swap", "ctrl+s")  # Fallback pro staré konfigurace
+
+    @property
+    def hotkey_clear(self) -> str:
+        """Zkratka pro vymazání input pole (Ctrl+C+C double-press)"""
+        return self.config.get("hotkey_clear", "ctrl+c")  # Fallback pro staré konfigurace
 
     @property
     def window_width(self) -> int:

@@ -86,8 +86,10 @@ class TranslatorApp:
         self.hotkey_manager = HotkeyManager(
             main_hotkey=self.config.hotkey_main,
             swap_hotkey=self.config.hotkey_swap,
+            clear_hotkey=self.config.hotkey_clear,
             workflow_callback=self._handle_main_hotkey,
-            swap_callback=self._swap_languages
+            swap_callback=self._swap_languages,
+            clear_callback=self._clear_input
         )
         self.hotkey_manager.register_hotkeys()
 
@@ -236,6 +238,21 @@ class TranslatorApp:
         # Zobrazení notifikace
         self._update_status(
             f"🔄 Směr změněn: {self.config.source_lang} → {self.config.target_lang}",
+            COLORS["status_ready"]
+        )
+
+    def _clear_input(self):
+        """Vymaže pouze input pole (Ctrl+C+C)"""
+        # Vymaže input pole
+        self.input_text.delete("1.0", "end")
+
+        # Fokus na input pole (pokud je okno viditelné)
+        if self.is_visible:
+            self.input_text.focus()
+
+        # Zobrazení notifikace
+        self._update_status(
+            "🗑️ Input pole vymazáno",
             COLORS["status_ready"]
         )
 
