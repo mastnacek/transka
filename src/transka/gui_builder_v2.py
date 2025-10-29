@@ -49,12 +49,15 @@ class GUIBuilderV2:
         self.translator = translator
         self.parent_app = parent_app
 
-        # Notebook (tabs)
-        self.notebook = None
-
         # Tab frames
         self.translation_tab = None
         self.settings_tab = None
+        self.current_tab = None
+
+        # Tab buttons
+        self.translation_tab_btn = None
+        self.settings_tab_btn = None
+        self.content_container = None
 
         # Translation widgets
         self.input_text = None
@@ -106,25 +109,31 @@ class GUIBuilderV2:
         self.root.columnconfigure(0, weight=1)
         self.root.rowconfigure(0, weight=1)
         main_frame.columnconfigure(0, weight=1)
-        main_frame.rowconfigure(1, weight=1)
+        main_frame.rowconfigure(2, weight=1)
 
         # Header (global - mimo tabs)
         self._create_header(main_frame)
 
-        # Notebook (tabs)
-        self.notebook = ttk.Notebook(main_frame)
-        self.notebook.grid(row=1, column=0, sticky=(tk.W, tk.E, tk.N, tk.S))
+        # Custom tab buttons (místo ttk.Notebook)
+        self._create_tab_buttons(main_frame)
+
+        # Container pro tab content
+        self.content_container = ttk.Frame(main_frame)
+        self.content_container.grid(row=2, column=0, sticky=(tk.W, tk.E, tk.N, tk.S))
+        self.content_container.columnconfigure(0, weight=1)
+        self.content_container.rowconfigure(0, weight=1)
 
         # Create tabs
         self.translation_tab = self._create_translation_tab(on_translate, on_clear, on_close)
         self.settings_tab = self._create_settings_tab(on_save_settings, on_test_api)
 
-        # Add tabs to notebook
-        self.notebook.add(self.translation_tab, text="  Překlad  ")
-        self.notebook.add(self.settings_tab, text="  Nastavení  ")
+        # Place tabs in container
+        self.translation_tab.grid(row=0, column=0, sticky=(tk.W, tk.E, tk.N, tk.S))
+        self.settings_tab.grid(row=0, column=0, sticky=(tk.W, tk.E, tk.N, tk.S))
 
-        # Bind tab change event
-        self.notebook.bind("<<NotebookTabChanged>>", self._on_tab_changed)
+        # Show translation tab by default
+        self.current_tab = "translation"
+        self.translation_tab.tkraise()
 
         return {
             "input_text": self.input_text,
@@ -159,6 +168,40 @@ class GUIBuilderV2:
             font=self.fonts["sans_font_bold"]
         )
         self.lang_label.pack(side=tk.LEFT)
+
+    def _create_tab_buttons(self, parent: ttk.Frame):
+        """Vytvoří vlastní tab tlačítka (místo ttk.Notebook)"""
+        tab_frame = tk.Frame(parent, bg=COLORS["bg_dark"], height=40)
+        tab_frame.grid(row=1, column=0, sticky=(tk.W, tk.E), pady=(0, 0))
+        tab_frame.grid_propagate(False)
+
+        # Tab button pro Překlad
+        self.translation_tab_btn = tk.Label(
+            tab_frame,
+            text="  Překlad  ",
+            bg=COLORS["bg_dark"],
+            fg=COLORS["accent_cyan"],
+            font=self.fonts["sans_font_bold"],
+            cursor="hand2",
+            padx=20,
+            pady=10
+        )
+        self.translation_tab_btn.pack(side=tk.LEFT)
+        self.translation_tab_btn.bind("<Button-1>", lambda e: self.switch_to_translation_tab())
+
+        # Tab button pro Nastavení
+        self.settings_tab_btn = tk.Label(
+            tab_frame,
+            text="  Nastavení  ",
+            bg=COLORS["bg_darker"],
+            fg=COLORS["text_secondary"],
+            font=self.fonts["sans_font"],
+            cursor="hand2",
+            padx=20,
+            pady=10
+        )
+        self.settings_tab_btn.pack(side=tk.LEFT)
+        self.settings_tab_btn.bind("<Button-1>", lambda e: self.switch_to_settings_tab())
 
     def _create_translation_tab(
         self,
@@ -438,16 +481,32 @@ class GUIBuilderV2:
         self.hotkey_clear_entry.insert(0, self.config.hotkey_clear)
         self.warning_threshold_entry.insert(0, str(self.config.usage_warning_threshold))
 
-    def _on_tab_changed(self, event):
-        """Handler pro změnu tabu"""
-        current_tab = self.notebook.index(self.notebook.select())
-
-        if current_tab == 0:  # Translation tab
-            # Focus na input pole
-            self.input_text.focus()
-        elif current_tab == 1:  # Settings tab
-            # Optional - můžeme dát focus na první settings field
-            pass
+    def _update_tab_styles(self):
+        """Aktualizuje styling tab buttonů podle aktivního tabu"""
+        if self.current_tab == "translation":
+            # Translation tab je aktivní
+            self.translation_tab_btn.config(
+                bg=COLORS["bg_dark"],
+                fg=COLORS["accent_cyan"],
+                font=self.fonts["sans_font_bold"]
+            )
+            self.settings_tab_btn.config(
+                bg=COLORS["bg_darker"],
+                fg=COLORS["text_secondary"],
+                font=self.fonts["sans_font"]
+            )
+        else:
+            # Settings tab je aktivní
+            self.translation_tab_btn.config(
+                bg=COLORS["bg_darker"],
+                fg=COLORS["text_secondary"],
+                font=self.fonts["sans_font"]
+            )
+            self.settings_tab_btn.config(
+                bg=COLORS["bg_dark"],
+                fg=COLORS["accent_cyan"],
+                font=self.fonts["sans_font_bold"]
+            )
 
     def get_settings_values(self) -> Dict[str, Any]:
         """Vrátí aktuální hodnoty z settings formuláře"""
@@ -464,8 +523,13 @@ class GUIBuilderV2:
 
     def switch_to_translation_tab(self):
         """Přepne na Translation tab (Ctrl+1)"""
-        self.notebook.select(0)
+        self.current_tab = "translation"
+        self.translation_tab.tkraise()
+        self._update_tab_styles()
+        self.input_text.focus()
 
     def switch_to_settings_tab(self):
         """Přepne na Settings tab (Ctrl+2)"""
-        self.notebook.select(1)
+        self.current_tab = "settings"
+        self.settings_tab.tkraise()
+        self._update_tab_styles()
