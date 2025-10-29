@@ -132,6 +132,35 @@ class ThemeManager:
             selectforeground=[('readonly', COLORS["bg_dark"])]
         )
 
+        # Notebook (tabs) styling
+        style.configure('TNotebook',
+            background=COLORS["bg_dark"],
+            borderwidth=0,
+            tabmargins=[0, 0, 0, 0]
+        )
+
+        # Tab styling
+        style.configure('TNotebook.Tab',
+            background=COLORS["bg_darker"],     # Inactive tab
+            foreground=COLORS["text_secondary"], # Inactive text
+            padding=[20, 10],                    # Horizontal, vertical padding
+            font=self.sans_font_bold,
+            borderwidth=0
+        )
+
+        # Tab active/hover states
+        style.map('TNotebook.Tab',
+            background=[
+                ('selected', COLORS["bg_dark"]),     # Active tab = same as content
+                ('active', COLORS["bg_input"])       # Hover
+            ],
+            foreground=[
+                ('selected', COLORS["accent_cyan"]),  # Active text = cyan
+                ('active', COLORS["text_primary"])    # Hover text
+            ],
+            expand=[('selected', [1, 1, 1, 0])]      # Expand to bottom
+        )
+
     def get_fonts(self) -> Dict[str, Any]:
         """
         Vrátí slovník s vytvořenými fonty

@@ -12,12 +12,11 @@ from transka.config import Config
 from transka.deepl_translator import DeepLTranslator
 from transka.google_translator import GoogleTranslator
 from transka.base_translator import BaseTranslator, UsageInfo
-from transka.settings_window import SettingsWindow
 from transka.theme_manager import ThemeManager
 from transka.translation_workflow import TranslationWorkflow
 from transka.hotkey_manager import HotkeyManager
 from transka.tray_manager import TrayManager
-from transka.gui_builder import GUIBuilder
+from transka.gui_builder_v2 import GUIBuilderV2
 from transka.theme import COLORS
 
 
@@ -31,7 +30,8 @@ class TranslatorApp:
         # Tkinter okno
         self.root = tk.Tk()
         self.root.title("Transka")
-        self.root.geometry(f"{self.config.window_width}x{self.config.window_height}")
+        # Větší okno pro tabs
+        self.root.geometry("750x600")
         self._setup_window_icon()
 
         # Theme Manager
@@ -39,13 +39,16 @@ class TranslatorApp:
         self.theme_manager.apply_theme()
         fonts = self.theme_manager.get_fonts()
 
-        # GUI Builder
-        gui_builder = GUIBuilder(
+        # GUI Builder V2 (s tabs)
+        self.gui_builder = GUIBuilderV2(
             self.root,
             fonts,
             self._get_translator_display(),
             self._get_language_display(),
-            self.config.hotkey_main
+            self.config.hotkey_main,
+            self.config,
+            self.translator,
+            parent_app=self
         )
 
         # Skrytí okna při startu
@@ -53,10 +56,11 @@ class TranslatorApp:
         self.is_visible = False
 
         # Build GUI
-        widgets = gui_builder.build(
+        widgets = self.gui_builder.build(
             on_translate=self._translate,
             on_clear=self._clear,
-            on_settings=self._show_settings,
+            on_save_settings=self._save_settings,
+            on_test_api=self._test_api,
             on_close=self._hide_window
         )
 
@@ -97,7 +101,7 @@ class TranslatorApp:
         self.tray_manager = TrayManager(
             app_name="Transka",
             on_show=self._show_window,
-            on_settings=self._show_settings,
+            on_settings=self._show_settings_tab,
             on_quit=self._quit_app
         )
         self.tray_manager.start()
@@ -141,6 +145,10 @@ class TranslatorApp:
         self.root.bind("<Escape>", lambda e: self._hide_window())
         self.root.bind("<Control-Return>", lambda e: self._translate())
 
+        # Keyboard shortcuts pro tab switching
+        self.root.bind("<Control-Key-1>", lambda e: self.gui_builder.switch_to_translation_tab())
+        self.root.bind("<Control-Key-2>", lambda e: self.gui_builder.switch_to_settings_tab())
+
     def _handle_main_hotkey(self):
         """
         Zpracuje hlavní klávesovou zkratku (3-step workflow s smart detection)
@@ -154,8 +162,9 @@ class TranslatorApp:
         state = self.workflow.get_state()
 
         if state == TranslationWorkflow.STATE_HIDDEN:
-            # Krok 1: Otevře okno
+            # Krok 1: Otevře okno (vždy na Translation tab)
             self._show_window()
+            self.gui_builder.switch_to_translation_tab()  # Force Translation tab
             self.workflow.set_state(TranslationWorkflow.STATE_SHOWN)
 
         elif state == TranslationWorkflow.STATE_SHOWN:
@@ -315,15 +324,101 @@ class TranslatorApp:
         self.lang_label.config(text=self._get_language_display())
         self._update_usage()
 
-    def _show_settings(self):
-        """Zobrazí okno s nastavením"""
-        SettingsWindow(
-            self.root,
-            self,
-            self.config,
-            self.translator,
-            self._on_settings_saved
-        )
+    def _save_settings(self):
+        """Uloží nastavení z Settings tab"""
+        settings = self.gui_builder.get_settings_values()
+
+        # API klíč
+        new_api_key = settings["api_key"]
+        if new_api_key != self.config.api_key:
+            self.config.set_api_key(new_api_key)
+            self.translator.update_api_key(new_api_key)
+
+        # Ostatní nastavení
+        self.config.set("translator_service", settings["translator_service"])
+        self.config.set("source_lang", settings["source_lang"])
+        self.config.set("target_lang", settings["target_lang"])
+        self.config.set("hotkey_main", settings["hotkey_main"])
+        self.config.set("hotkey_swap", settings["hotkey_swap"])
+        self.config.set("hotkey_clear", settings["hotkey_clear"])
+
+        try:
+            threshold = int(settings["usage_warning_threshold"])
+            self.config.set("usage_warning_threshold", threshold)
+        except ValueError:
+            messagebox.showerror("Chyba", "Neplatná hodnota pro práh varování")
+            return
+
+        # Okamžitá aplikace změn - hlavní zkratka
+        old_main_hotkey = self.config.hotkey_main
+        new_main_hotkey = settings["hotkey_main"]
+
+        if old_main_hotkey != new_main_hotkey:
+            success = self.hotkey_manager.update_main_hotkey(new_main_hotkey)
+            if not success:
+                messagebox.showerror("Chyba", f"Nelze nastavit hlavní zkratku {new_main_hotkey}")
+                return
+
+        # Okamžitá aplikace změn - swap zkratka
+        old_swap_hotkey = self.config.hotkey_swap
+        new_swap_hotkey = settings["hotkey_swap"]
+
+        if old_swap_hotkey != new_swap_hotkey:
+            success = self.hotkey_manager.update_swap_hotkey(new_swap_hotkey)
+            if not success:
+                messagebox.showerror("Chyba", f"Nelze nastavit swap zkratku {new_swap_hotkey}")
+                return
+
+        # Okamžitá aplikace změn - clear zkratka
+        old_clear_hotkey = self.config.hotkey_clear
+        new_clear_hotkey = settings["hotkey_clear"]
+
+        if old_clear_hotkey != new_clear_hotkey:
+            success = self.hotkey_manager.update_clear_hotkey(new_clear_hotkey)
+            if not success:
+                messagebox.showerror("Chyba", f"Nelze nastavit clear zkratku {new_clear_hotkey}")
+                return
+
+        messagebox.showinfo("Úspěch", "Nastavení aplikováno okamžitě!")
+        self._on_settings_saved()
+
+    def _test_api(self):
+        """Test připojení k DeepL API"""
+        settings = self.gui_builder.get_settings_values()
+        new_api_key = settings["api_key"]
+
+        if not new_api_key:
+            messagebox.showerror("Chyba", "Zadejte API klíč")
+            return
+
+        # Dočasný translator pro test
+        test_translator = DeepLTranslator(new_api_key)
+
+        if not test_translator.is_configured():
+            messagebox.showerror("Chyba", "Nepodařilo se inicializovat DeepL API")
+            return
+
+        # Test překladu
+        result, error = test_translator.translate("Ahoj", "CS", "EN-US")
+
+        if error:
+            messagebox.showerror("Chyba API", f"Test selhal:\n{error}")
+        else:
+            usage_info, usage_error = test_translator.get_usage()
+            if usage_info:
+                messagebox.showinfo(
+                    "Úspěch",
+                    f"API klíč funguje!\n\n"
+                    f"Test překladu: Ahoj → {result}\n\n"
+                    f"Spotřeba: {usage_info.formatted_usage}"
+                )
+            else:
+                messagebox.showinfo("Úspěch", f"API klíč funguje!\n\nTest překladu: Ahoj → {result}")
+
+    def _show_settings_tab(self):
+        """Zobrazí okno s Settings tabem"""
+        self._show_window()
+        self.gui_builder.switch_to_settings_tab()
 
     def _quit_app(self):
         """Ukončí aplikaci"""
@@ -340,7 +435,7 @@ class TranslatorApp:
                 "Upozornění",
                 "DeepL API klíč není nastaven.\n\nOtevřete Nastavení a zadejte API klíč."
             ))
-            self.root.after(600, self._show_settings)
+            self.root.after(600, self._show_settings_tab)
 
         self.root.mainloop()
 
