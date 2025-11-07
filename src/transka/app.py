@@ -30,8 +30,8 @@ class TranslatorApp:
         # Tkinter okno
         self.root = tk.Tk()
         self.root.title("Transka")
-        # Větší okno pro tabs
-        self.root.geometry("750x600")
+        # Větší okno pro lepší UX s většími input/output poli
+        self.root.geometry("800x720")
         self._setup_window_icon()
 
         # Theme Manager

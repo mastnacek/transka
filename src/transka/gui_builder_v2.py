@@ -83,6 +83,9 @@ class GUIBuilderV2:
         self.hotkey_clear_entry = None
         self.warning_threshold_entry = None
 
+        # Placeholder state
+        self.placeholder_active = False
+
     def build(
         self,
         on_translate: Callable[[], None],
@@ -143,6 +146,9 @@ class GUIBuilderV2:
         self.current_tab = "translation"
         self.translation_tab.tkraise()
 
+        # Přidat placeholder text do input pole
+        self._add_placeholder_to_input()
+
         return {
             "input_text": self.input_text,
             "output_text": self.output_text,
@@ -152,38 +158,71 @@ class GUIBuilderV2:
             "lang_label": self.lang_label
         }
 
+    def _add_placeholder_to_input(self):
+        """Přidá placeholder text do input pole"""
+        placeholder_text = "💡 Tip: Vložte nebo napište text, který chcete přeložit...\n\nZkratky:\n• Ctrl+Enter - Přeložit\n• Ctrl+1 - Překlad tab\n• Ctrl+2 - Nastavení tab"
+
+        # Vložit placeholder
+        self.input_text.insert("1.0", placeholder_text)
+        self.input_text.config(fg=COLORS["text_muted"])
+
+        # Flag pro sledování placeholder stavu
+        self.placeholder_active = True
+
+        # Bind události
+        self.input_text.bind("<FocusIn>", self._on_input_focus_in)
+        self.input_text.bind("<FocusOut>", self._on_input_focus_out)
+
+    def _on_input_focus_in(self, event):
+        """Smaže placeholder při získání focusu"""
+        if self.placeholder_active:
+            self.input_text.delete("1.0", "end")
+            self.input_text.config(fg=COLORS["text_primary"])
+            self.placeholder_active = False
+
+    def _on_input_focus_out(self, event):
+        """Přidá placeholder zpět pokud je pole prázdné"""
+        if not self.input_text.get("1.0", "end-1c").strip():
+            placeholder_text = "💡 Tip: Vložte nebo napište text, který chcete přeložit...\n\nZkratky:\n• Ctrl+Enter - Přeložit\n• Ctrl+1 - Překlad tab\n• Ctrl+2 - Nastavení tab"
+            self.input_text.insert("1.0", placeholder_text)
+            self.input_text.config(fg=COLORS["text_muted"])
+            self.placeholder_active = True
+
     def _create_header(self, parent: ttk.Frame):
         """Vytvoří header s překladačem a jazyky (globální mimo tabs)"""
         header_frame = tk.Frame(parent, bg=COLORS["bg_dark"])
-        header_frame.grid(row=0, column=0, sticky=(tk.W, tk.E), pady=(0, 10))
+        header_frame.grid(row=0, column=0, sticky=(tk.W, tk.E), pady=(5, 15))
 
-        # Label pro překladač
+        # Label pro překladač - větší font
+        from tkinter import font as tkfont
+        header_font = tkfont.Font(family="Segoe UI", size=13, weight="bold")
+
         self.translator_label = tk.Label(
             header_frame,
             text=self.translator_display,
             fg=COLORS["accent_yellow"],
             bg=COLORS["bg_dark"],
-            font=self.fonts["sans_font_bold"]
+            font=header_font
         )
-        self.translator_label.pack(side=tk.LEFT, padx=(0, 15))
+        self.translator_label.pack(side=tk.LEFT, padx=(0, 20))
 
-        # Label pro jazyky
+        # Label pro jazyky - větší font
         self.lang_label = tk.Label(
             header_frame,
             text=self.language_display,
             fg=COLORS["accent_cyan"],
             bg=COLORS["bg_dark"],
-            font=self.fonts["sans_font_bold"]
+            font=header_font
         )
         self.lang_label.pack(side=tk.LEFT)
 
     def _create_tab_buttons(self, parent: ttk.Frame):
-        """Vytvoří vlastní tab tlačítka s border styling"""
+        """Vytvoří vlastní tab tlačítka s border styling a hover efekty"""
         # Tab bar container
         tab_bar_container = tk.Frame(parent, bg=COLORS["bg_dark"])
         tab_bar_container.grid(row=1, column=0, sticky=(tk.W, tk.E), pady=(0, 0))
 
-        tab_frame = tk.Frame(tab_bar_container, bg=COLORS["bg_dark"], height=40)
+        tab_frame = tk.Frame(tab_bar_container, bg=COLORS["bg_dark"], height=45)
         tab_frame.pack(fill=tk.X, padx=0, pady=0)
         tab_frame.pack_propagate(False)
 
@@ -199,16 +238,21 @@ class GUIBuilderV2:
 
         self.translation_tab_label = tk.Label(
             self.translation_tab_btn,
-            text="  Překlad  ",
+            text="📝  Překlad",
             bg=COLORS["bg_dark"],
             fg=COLORS["accent_cyan"],
             font=self.fonts["sans_font_bold"],
             cursor="hand2"
         )
-        self.translation_tab_label.pack(fill=tk.BOTH, expand=True, padx=15, pady=8)
+        self.translation_tab_label.pack(fill=tk.BOTH, expand=True, padx=18, pady=10)
 
+        # Bind click a hover events pro translation tab
         self.translation_tab_btn.bind("<Button-1>", lambda e: self.switch_to_translation_tab())
         self.translation_tab_label.bind("<Button-1>", lambda e: self.switch_to_translation_tab())
+        self.translation_tab_btn.bind("<Enter>", lambda e: self._on_tab_hover_enter("translation"))
+        self.translation_tab_btn.bind("<Leave>", lambda e: self._on_tab_hover_leave("translation"))
+        self.translation_tab_label.bind("<Enter>", lambda e: self._on_tab_hover_enter("translation"))
+        self.translation_tab_label.bind("<Leave>", lambda e: self._on_tab_hover_leave("translation"))
 
         # Tab button pro Nastavení - RAISED (neaktivní)
         self.settings_tab_btn = tk.Frame(
@@ -222,16 +266,21 @@ class GUIBuilderV2:
 
         self.settings_tab_label = tk.Label(
             self.settings_tab_btn,
-            text="  Nastavení  ",
+            text="⚙️  Nastavení",
             bg=COLORS["bg_darker"],
             fg=COLORS["text_secondary"],
             font=self.fonts["sans_font"],
             cursor="hand2"
         )
-        self.settings_tab_label.pack(fill=tk.BOTH, expand=True, padx=15, pady=8)
+        self.settings_tab_label.pack(fill=tk.BOTH, expand=True, padx=18, pady=10)
 
+        # Bind click a hover events pro settings tab
         self.settings_tab_btn.bind("<Button-1>", lambda e: self.switch_to_settings_tab())
         self.settings_tab_label.bind("<Button-1>", lambda e: self.switch_to_settings_tab())
+        self.settings_tab_btn.bind("<Enter>", lambda e: self._on_tab_hover_enter("settings"))
+        self.settings_tab_btn.bind("<Leave>", lambda e: self._on_tab_hover_leave("settings"))
+        self.settings_tab_label.bind("<Enter>", lambda e: self._on_tab_hover_enter("settings"))
+        self.settings_tab_label.bind("<Leave>", lambda e: self._on_tab_hover_leave("settings"))
 
         # Separator line - neon cyan accent
         separator = tk.Frame(
@@ -256,12 +305,16 @@ class GUIBuilderV2:
         frame.rowconfigure(3, weight=1)
 
         # Input pole
-        input_label = ttk.Label(frame, text="Text k překladu:")
-        input_label.grid(row=0, column=0, sticky=tk.W, pady=(5, 5))
+        input_label = ttk.Label(
+            frame,
+            text="📝 Text k překladu:",
+            font=self.fonts["sans_font_bold"]
+        )
+        input_label.grid(row=0, column=0, sticky=tk.W, pady=(8, 6))
 
         self.input_text = scrolledtext.ScrolledText(
             frame,
-            height=8,
+            height=10,
             wrap=tk.WORD,
             font=self.fonts["mono_font_large"],
             bg=COLORS["bg_input"],
@@ -275,7 +328,7 @@ class GUIBuilderV2:
             highlightcolor=COLORS["border_focus"],
             highlightbackground=COLORS["border"]
         )
-        self.input_text.grid(row=1, column=0, sticky=(tk.W, tk.E, tk.N, tk.S), pady=(0, 10))
+        self.input_text.grid(row=1, column=0, sticky=(tk.W, tk.E, tk.N, tk.S), pady=(0, 12))
 
         # Styling scrollbaru
         self.input_text.vbar.config(
@@ -287,12 +340,16 @@ class GUIBuilderV2:
         )
 
         # Output pole
-        output_label = ttk.Label(frame, text="Přeložený text:")
-        output_label.grid(row=2, column=0, sticky=tk.W, pady=(0, 5))
+        output_label = ttk.Label(
+            frame,
+            text="✨ Přeložený text:",
+            font=self.fonts["sans_font_bold"]
+        )
+        output_label.grid(row=2, column=0, sticky=tk.W, pady=(0, 6))
 
         self.output_text = scrolledtext.ScrolledText(
             frame,
-            height=8,
+            height=10,
             wrap=tk.WORD,
             state=tk.DISABLED,
             font=self.fonts["mono_font_large"],
@@ -306,7 +363,7 @@ class GUIBuilderV2:
             highlightcolor=COLORS["accent_purple"],
             highlightbackground=COLORS["border"]
         )
-        self.output_text.grid(row=3, column=0, sticky=(tk.W, tk.E, tk.N, tk.S), pady=(0, 10))
+        self.output_text.grid(row=3, column=0, sticky=(tk.W, tk.E, tk.N, tk.S), pady=(0, 12))
 
         # Styling scrollbaru
         self.output_text.vbar.config(
@@ -317,45 +374,53 @@ class GUIBuilderV2:
             width=12
         )
 
-        # Status bar
+        # Status bar s lepším stylingem
         status_frame = ttk.Frame(frame)
-        status_frame.grid(row=4, column=0, sticky=(tk.W, tk.E), pady=(5, 0))
+        status_frame.grid(row=4, column=0, sticky=(tk.W, tk.E), pady=(8, 5))
 
         self.status_label = ttk.Label(
             status_frame,
-            text="Připraveno",
-            foreground=COLORS["text_primary"]
+            text="✅ Připraveno",
+            foreground=COLORS["status_ready"],
+            font=self.fonts["sans_font"]
         )
         self.status_label.pack(side=tk.LEFT)
 
         self.usage_label = ttk.Label(
             status_frame,
-            text="Načítám usage...",
-            foreground=COLORS["text_secondary"]
+            text="📊 Načítám usage...",
+            foreground=COLORS["text_secondary"],
+            font=self.fonts["sans_font"]
         )
         self.usage_label.pack(side=tk.RIGHT)
 
-        # Tlačítka
+        # Tlačítka s ikonami a lepším stylingem
         button_frame = ttk.Frame(frame)
-        button_frame.grid(row=5, column=0, pady=(10, 5))
+        button_frame.grid(row=5, column=0, pady=(15, 10))
 
-        ttk.Button(
+        # Primární tlačítko - Přeložit
+        translate_btn = ttk.Button(
             button_frame,
-            text="Přeložit (Ctrl+Enter)",
+            text="🌐 Přeložit (Ctrl+Enter)",
             command=on_translate
-        ).pack(side=tk.LEFT, padx=5)
+        )
+        translate_btn.pack(side=tk.LEFT, padx=6, ipady=4)
 
-        ttk.Button(
+        # Sekundární tlačítko - Vymazat
+        clear_btn = ttk.Button(
             button_frame,
-            text="Vymazat",
+            text="🗑️ Vymazat",
             command=on_clear
-        ).pack(side=tk.LEFT, padx=5)
+        )
+        clear_btn.pack(side=tk.LEFT, padx=6, ipady=4)
 
-        ttk.Button(
+        # Sekundární tlačítko - Zavřít
+        close_btn = ttk.Button(
             button_frame,
-            text="Zavřít",
+            text="✖️ Zavřít",
             command=on_close
-        ).pack(side=tk.LEFT, padx=5)
+        )
+        close_btn.pack(side=tk.LEFT, padx=6, ipady=4)
 
         return frame
 
@@ -496,12 +561,23 @@ class GUIBuilderV2:
         self.warning_threshold_entry.grid(row=row, column=1, pady=5, padx=5)
         row += 1
 
-        # Tlačítka
+        # Tlačítka s ikonami
         button_frame = ttk.Frame(scrollable_frame)
         button_frame.grid(row=row, column=0, columnspan=2, pady=20)
 
-        ttk.Button(button_frame, text="Uložit", command=on_save).pack(side=tk.LEFT, padx=5)
-        ttk.Button(button_frame, text="Test API", command=on_test_api).pack(side=tk.LEFT, padx=5)
+        save_btn = ttk.Button(
+            button_frame,
+            text="💾 Uložit nastavení",
+            command=on_save
+        )
+        save_btn.pack(side=tk.LEFT, padx=6, ipady=4)
+
+        test_btn = ttk.Button(
+            button_frame,
+            text="🧪 Test API",
+            command=on_test_api
+        )
+        test_btn.pack(side=tk.LEFT, padx=6, ipady=4)
 
         # Načíst aktuální hodnoty
         self._load_settings_values()
@@ -577,6 +653,38 @@ class GUIBuilderV2:
             "usage_warning_threshold": self.warning_threshold_entry.get().strip()
         }
 
+    def _on_tab_hover_enter(self, tab_name: str):
+        """Hover efekt při najetí myší na tab"""
+        # Pokud tab NENÍ aktivní, zobraz hover efekt
+        if tab_name == "translation" and self.current_tab != "translation":
+            self.translation_tab_btn.config(bg=COLORS["bg_input"])
+            self.translation_tab_label.config(
+                bg=COLORS["bg_input"],
+                fg=COLORS["text_primary"]
+            )
+        elif tab_name == "settings" and self.current_tab != "settings":
+            self.settings_tab_btn.config(bg=COLORS["bg_input"])
+            self.settings_tab_label.config(
+                bg=COLORS["bg_input"],
+                fg=COLORS["text_primary"]
+            )
+
+    def _on_tab_hover_leave(self, tab_name: str):
+        """Hover efekt při opuštění myší z tabu"""
+        # Pokud tab NENÍ aktivní, vrať původní styl
+        if tab_name == "translation" and self.current_tab != "translation":
+            self.translation_tab_btn.config(bg=COLORS["bg_darker"])
+            self.translation_tab_label.config(
+                bg=COLORS["bg_darker"],
+                fg=COLORS["text_secondary"]
+            )
+        elif tab_name == "settings" and self.current_tab != "settings":
+            self.settings_tab_btn.config(bg=COLORS["bg_darker"])
+            self.settings_tab_label.config(
+                bg=COLORS["bg_darker"],
+                fg=COLORS["text_secondary"]
+            )
+
     def switch_to_translation_tab(self):
         """Přepne na Translation tab (Ctrl+1)"""
         self.current_tab = "translation"
@@ -589,3 +697,21 @@ class GUIBuilderV2:
         self.current_tab = "settings"
         self.settings_tab.tkraise()
         self._update_tab_styles()
+
+    def get_input_text(self) -> str:
+        """
+        Vrátí text z input pole (ignoruje placeholder)
+
+        Returns:
+            String s textem, nebo prázdný string pokud je aktivní placeholder
+        """
+        if self.placeholder_active:
+            return ""
+        return self.input_text.get("1.0", "end-1c").strip()
+
+    def clear_placeholder_if_active(self):
+        """Vymaže placeholder pokud je aktivní (např. při paste)"""
+        if self.placeholder_active:
+            self.input_text.delete("1.0", "end")
+            self.input_text.config(fg=COLORS["text_primary"])
+            self.placeholder_active = False
