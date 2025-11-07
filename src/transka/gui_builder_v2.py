@@ -160,7 +160,7 @@ class GUIBuilderV2:
 
     def _add_placeholder_to_input(self):
         """Přidá placeholder text do input pole"""
-        placeholder_text = "💡 Tip: Vložte nebo napište text, který chcete přeložit...\n\nZkratky:\n• Ctrl+Enter - Přeložit\n• Ctrl+1 - Překlad tab\n• Ctrl+2 - Nastavení tab"
+        placeholder_text = "💡 Tip: Vložte nebo napište text, který chcete přeložit...\n\nGlobální zkratky:\n• Ctrl+Alt+T - Workflow překladu (otevře → přeloží → zkopíruje)\n• Ctrl+Alt+S - Prohodit jazyky (CS ↔ EN)\n• Ctrl+Alt+C - Vymazat input pole\n\nV aplikaci:\n• Ctrl+Enter - Přeložit\n• Ctrl+1 / Ctrl+2 - Přepnout tab"
 
         # Vložit placeholder
         self.input_text.insert("1.0", placeholder_text)
@@ -183,7 +183,7 @@ class GUIBuilderV2:
     def _on_input_focus_out(self, event):
         """Přidá placeholder zpět pokud je pole prázdné"""
         if not self.input_text.get("1.0", "end-1c").strip():
-            placeholder_text = "💡 Tip: Vložte nebo napište text, který chcete přeložit...\n\nZkratky:\n• Ctrl+Enter - Přeložit\n• Ctrl+1 - Překlad tab\n• Ctrl+2 - Nastavení tab"
+            placeholder_text = "💡 Tip: Vložte nebo napište text, který chcete přeložit...\n\nGlobální zkratky:\n• Ctrl+Alt+T - Workflow překladu (otevře → přeloží → zkopíruje)\n• Ctrl+Alt+S - Prohodit jazyky (CS ↔ EN)\n• Ctrl+Alt+C - Vymazat input pole\n\nV aplikaci:\n• Ctrl+Enter - Přeložit\n• Ctrl+1 / Ctrl+2 - Přepnout tab"
             self.input_text.insert("1.0", placeholder_text)
             self.input_text.config(fg=COLORS["text_muted"])
             self.placeholder_active = True
@@ -514,14 +514,14 @@ class GUIBuilderV2:
         row += 1
 
         # Klávesová zkratka - hlavní
-        ttk.Label(scrollable_frame, text="Hlavní zkratka:").grid(row=row, column=0, sticky=tk.W, pady=5)
+        ttk.Label(scrollable_frame, text="Hlavní zkratka (workflow):").grid(row=row, column=0, sticky=tk.W, pady=5)
         self.hotkey_main_entry = ttk.Entry(scrollable_frame, width=50)
         self.hotkey_main_entry.grid(row=row, column=1, pady=5, padx=5)
         row += 1
 
         ttk.Label(
             scrollable_frame,
-            text="Formát: ctrl+p (dvojité stisknutí = Ctrl+P+P)",
+            text="Formát: ctrl+alt+t (otevře okno → přeloží → zkopíruje)",
             font=("", 8),
             foreground="gray"
         ).grid(row=row, column=0, columnspan=2, sticky=tk.W, pady=0, padx=5)
@@ -535,7 +535,7 @@ class GUIBuilderV2:
 
         ttk.Label(
             scrollable_frame,
-            text="Formát: ctrl+s (dvojité stisknutí = Ctrl+S+S)",
+            text="Formát: ctrl+alt+s (prohodí CS ↔ EN)",
             font=("", 8),
             foreground="gray"
         ).grid(row=row, column=0, columnspan=2, sticky=tk.W, pady=0, padx=5)
@@ -549,7 +549,7 @@ class GUIBuilderV2:
 
         ttk.Label(
             scrollable_frame,
-            text="Formát: ctrl+c (dvojité stisknutí = Ctrl+C+C)",
+            text="Formát: ctrl+alt+c (smaže input pole)",
             font=("", 8),
             foreground="gray"
         ).grid(row=row, column=0, columnspan=2, sticky=tk.W, pady=0, padx=5)
