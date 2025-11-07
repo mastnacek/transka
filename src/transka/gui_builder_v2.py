@@ -3,6 +3,8 @@
 GUI Builder V2 pro aplikaci Transka - Tab-based interface
 Kombinuje překlad a nastavení do jednoho okna s tabs
 """
+from __future__ import annotations
+
 import tkinter as tk
 from tkinter import ttk, scrolledtext, messagebox
 from typing import Dict, Any, Callable

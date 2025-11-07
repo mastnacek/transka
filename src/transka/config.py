@@ -2,10 +2,16 @@
 """
 Správa konfigurace aplikace DeepL Translator
 """
+from __future__ import annotations
+
 import json
-import os
+import logging
+from pathlib import Path
 from typing import Dict, Any
 from dotenv import load_dotenv
+
+# Logging setup
+logger = logging.getLogger(__name__)
 
 # Načtení .env souboru
 load_dotenv()
@@ -14,7 +20,8 @@ load_dotenv()
 class Config:
     """Správa konfigurace aplikace"""
 
-    CONFIG_FILE = "config.json"
+    CONFIG_FILE = Path("config.json")
+    ENV_FILE = Path(".env")
 
     DEFAULT_CONFIG = {
         "source_lang": "CS",
@@ -36,24 +43,27 @@ class Config:
     def load(self) -> None:
         """Načte konfiguraci ze souboru a .env"""
         # API klíč z .env
+        import os
         self.api_key = os.getenv("DEEPL_API_KEY", "")
 
         # Ostatní nastavení z config.json
-        if os.path.exists(self.CONFIG_FILE):
+        if self.CONFIG_FILE.exists():
             try:
-                with open(self.CONFIG_FILE, "r", encoding="utf-8") as f:
-                    saved_config = json.load(f)
-                    self.config.update(saved_config)
+                config_data = self.CONFIG_FILE.read_text(encoding="utf-8")
+                saved_config = json.loads(config_data)
+                self.config.update(saved_config)
+                logger.info(f"Konfigurace načtena z {self.CONFIG_FILE}")
             except Exception as e:
-                print(f"Chyba při načítání konfigurace: {e}")
+                logger.error(f"Chyba při načítání konfigurace: {e}", exc_info=True)
 
     def save(self) -> None:
         """Uloží konfiguraci do souboru"""
         try:
-            with open(self.CONFIG_FILE, "w", encoding="utf-8") as f:
-                json.dump(self.config, f, indent=2, ensure_ascii=False)
+            config_data = json.dumps(self.config, indent=2, ensure_ascii=False)
+            self.CONFIG_FILE.write_text(config_data, encoding="utf-8")
+            logger.debug(f"Konfigurace uložena do {self.CONFIG_FILE}")
         except Exception as e:
-            print(f"Chyba při ukládání konfigurace: {e}")
+            logger.error(f"Chyba při ukládání konfigurace: {e}", exc_info=True)
 
     def get(self, key: str, default: Any = None) -> Any:
         """Získá hodnotu z konfigurace"""
@@ -69,12 +79,10 @@ class Config:
         self.api_key = api_key
 
         # Uložení do .env souboru
-        env_path = ".env"
         lines = []
 
-        if os.path.exists(env_path):
-            with open(env_path, "r", encoding="utf-8") as f:
-                lines = f.readlines()
+        if self.ENV_FILE.exists():
+            lines = self.ENV_FILE.read_text(encoding="utf-8").splitlines(keepends=True)
 
         # Aktualizace nebo přidání DEEPL_API_KEY
         key_found = False
@@ -87,8 +95,8 @@ class Config:
         if not key_found:
             lines.append(f"DEEPL_API_KEY={api_key}\n")
 
-        with open(env_path, "w", encoding="utf-8") as f:
-            f.writelines(lines)
+        self.ENV_FILE.write_text("".join(lines), encoding="utf-8")
+        logger.info("API klíč aktualizován v .env souboru")
 
     @property
     def source_lang(self) -> str:

@@ -3,11 +3,17 @@
 Theme Manager pro aplikaci Transka
 Aplikuje modern dark theme s glow efekty na Tkinter okna
 """
+from __future__ import annotations
+
 import tkinter as tk
 from tkinter import ttk, font as tkfont
 from typing import Dict, Any
+import logging
 
 from transka.theme import COLORS, FONTS
+
+# Logging setup
+logger = logging.getLogger(__name__)
 
 
 class ThemeManager:
@@ -62,7 +68,7 @@ class ThemeManager:
                 ctypes.sizeof(value)
             )
         except Exception as e:
-            print(f"Dark titlebar nepodporován: {e}")  # Debug info
+            logger.debug(f"Dark titlebar nepodporován: {e}")
 
     def _create_fonts(self):
         """Vytvoří fonty pro aplikaci"""

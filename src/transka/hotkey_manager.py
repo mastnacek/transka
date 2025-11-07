@@ -3,8 +3,14 @@
 Hotkey Manager pro aplikaci Transka
 Spravuje globální klávesové zkratky
 """
+from __future__ import annotations
+
 import keyboard
 from typing import Callable
+import logging
+
+# Logging setup
+logger = logging.getLogger(__name__)
 
 
 class HotkeyManager:
@@ -54,7 +60,7 @@ class HotkeyManager:
             self._registered_hotkeys.append(self.clear_hotkey)
 
         except Exception as e:
-            print(f"Chyba při nastavování zkratek: {e}")
+            logger.error(f"Chyba při nastavování zkratek: {e}", exc_info=True)
 
     def update_main_hotkey(self, new_hotkey: str):
         """
@@ -76,12 +82,13 @@ class HotkeyManager:
             keyboard.add_hotkey(new_hotkey, self.workflow_callback)
             self._registered_hotkeys.append(new_hotkey)
             self.main_hotkey = new_hotkey
+            logger.info(f"Hlavní zkratka změněna na: {new_hotkey}")
             return True
         except Exception as e:
-            print(f"Chyba při změně zkratky: {e}")
+            logger.error(f"Chyba při změně zkratky: {e}", exc_info=True)
             return False
 
-    def update_swap_hotkey(self, new_hotkey: str):
+    def update_swap_hotkey(self, new_hotkey: str) -> bool:
         """
         Aktualizuje swap zkratku (pro live reload z Settings)
 
@@ -101,12 +108,13 @@ class HotkeyManager:
             keyboard.add_hotkey(new_hotkey, self.swap_callback)
             self._registered_hotkeys.append(new_hotkey)
             self.swap_hotkey = new_hotkey
+            logger.info(f"Swap zkratka změněna na: {new_hotkey}")
             return True
         except Exception as e:
-            print(f"Chyba při změně swap zkratky: {e}")
+            logger.error(f"Chyba při změně swap zkratky: {e}", exc_info=True)
             return False
 
-    def update_clear_hotkey(self, new_hotkey: str):
+    def update_clear_hotkey(self, new_hotkey: str) -> bool:
         """
         Aktualizuje clear zkratku (pro live reload z Settings)
 
@@ -126,9 +134,10 @@ class HotkeyManager:
             keyboard.add_hotkey(new_hotkey, self.clear_callback)
             self._registered_hotkeys.append(new_hotkey)
             self.clear_hotkey = new_hotkey
+            logger.info(f"Clear zkratka změněna na: {new_hotkey}")
             return True
         except Exception as e:
-            print(f"Chyba při změně clear zkratky: {e}")
+            logger.error(f"Chyba při změně clear zkratky: {e}", exc_info=True)
             return False
 
     def unregister_all(self):
