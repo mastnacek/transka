@@ -3,24 +3,38 @@
 Translation Workflow Manager pro aplikaci Transka
 Spravuje 3-step překlad workflow s state machine
 """
+from __future__ import annotations
+
 import tkinter as tk
 from tkinter import messagebox, scrolledtext
 import threading
 import pyperclip
 from typing import Optional, Callable
 import ctypes
+from enum import IntEnum, auto
+import logging
 
 from transka.base_translator import BaseTranslator
 from transka.theme import COLORS
+
+# Logging setup
+logger = logging.getLogger(__name__)
+
+
+class WorkflowState(IntEnum):
+    """Stavy workflow pro překlad"""
+    HIDDEN = 0
+    SHOWN = 1
+    TRANSLATED = 2
 
 
 class TranslationWorkflow:
     """Správce workflow pro překlad textu (3-step process)"""
 
-    # State machine stavy
-    STATE_HIDDEN = 0
-    STATE_SHOWN = 1
-    STATE_TRANSLATED = 2
+    # Zpětná kompatibilita - aliasy pro staré konstanty
+    STATE_HIDDEN = WorkflowState.HIDDEN
+    STATE_SHOWN = WorkflowState.SHOWN
+    STATE_TRANSLATED = WorkflowState.TRANSLATED
 
     def __init__(
         self,
@@ -53,32 +67,33 @@ class TranslationWorkflow:
         self.usage_update_callback = usage_update_callback
 
         # State pro workflow
-        self.state = self.STATE_HIDDEN
-        self.previous_window = None
+        self.state: WorkflowState = WorkflowState.HIDDEN
+        self.previous_window: Optional[int] = None
 
-    def update_translator(self, translator: BaseTranslator):
+    def update_translator(self, translator: BaseTranslator) -> None:
         """Aktualizuje překladač (při změně v Settings)"""
         self.translator = translator
 
-    def update_languages(self, source_lang: str, target_lang: str):
+    def update_languages(self, source_lang: str, target_lang: str) -> None:
         """Aktualizuje jazyky (při změně v Settings)"""
         self.source_lang = source_lang
         self.target_lang = target_lang
 
-    def save_previous_window(self):
+    def save_previous_window(self) -> None:
         """Uloží předchozí aktivní okno pro pozdější restore fokus"""
         try:
             self.previous_window = ctypes.windll.user32.GetForegroundWindow()
-        except:
+        except Exception as e:
+            logger.debug(f"Nelze uložit předchozí okno: {e}")
             self.previous_window = None
 
-    def restore_previous_window(self):
+    def restore_previous_window(self) -> None:
         """Obnoví fokus na předchozí okno"""
         if self.previous_window:
             try:
                 ctypes.windll.user32.SetForegroundWindow(self.previous_window)
-            except:
-                pass
+            except Exception as e:
+                logger.debug(f"Nelze obnovit fokus: {e}")
 
     def translate_with_display(self, root: tk.Tk):
         """
@@ -181,14 +196,16 @@ class TranslationWorkflow:
         self.status_callback("Připraveno", COLORS["text_primary"])
         self.input_widget.focus()
 
-    def get_state(self) -> int:
+    def get_state(self) -> WorkflowState:
         """Vrátí aktuální stav workflow"""
         return self.state
 
-    def set_state(self, state: int):
+    def set_state(self, state: WorkflowState) -> None:
         """Nastaví stav workflow"""
         self.state = state
+        logger.debug(f"Workflow state changed to: {state.name}")
 
-    def reset_state(self):
+    def reset_state(self) -> None:
         """Resetuje workflow do výchozího stavu"""
-        self.state = self.STATE_HIDDEN
+        self.state = WorkflowState.HIDDEN
+        logger.debug("Workflow state reset to HIDDEN")

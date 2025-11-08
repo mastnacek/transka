@@ -91,7 +91,7 @@ class SettingsWindow:
         ttk.Label(main_frame, text="", font=("", 8)).grid(row=5, column=0, columnspan=2, sticky=tk.W, pady=0)
         ttk.Label(
             main_frame,
-            text="Formát: ctrl+p (dvojité stisknutí = Ctrl+P+P). Příklady: win+p, alt+t",
+            text="Formát: ctrl+alt+t (workflow překladu). Příklady: ctrl+alt+t, ctrl+shift+t",
             font=("", 8),
             foreground="gray"
         ).grid(row=5, column=0, columnspan=2, sticky=tk.W, pady=0, padx=5)
@@ -103,7 +103,7 @@ class SettingsWindow:
 
         ttk.Label(
             main_frame,
-            text="Formát: ctrl+s (dvojité stisknutí = Ctrl+S+S). Prohodí CS↔EN",
+            text="Formát: ctrl+alt+s (prohodí CS ↔ EN)",
             font=("", 8),
             foreground="gray"
         ).grid(row=7, column=0, columnspan=2, sticky=tk.W, pady=0, padx=5)
@@ -115,7 +115,7 @@ class SettingsWindow:
 
         ttk.Label(
             main_frame,
-            text="Formát: ctrl+c (dvojité stisknutí = Ctrl+C+C). Vymaže input pole",
+            text="Formát: ctrl+alt+c (smaže input pole)",
             font=("", 8),
             foreground="gray"
         ).grid(row=9, column=0, columnspan=2, sticky=tk.W, pady=0, padx=5)
